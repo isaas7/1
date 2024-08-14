@@ -1,0 +1,8 @@
+.env
+cert.pem
+dh.pem
+key.pem
+compile_flags.txt
+main
+*.log
+obj/
