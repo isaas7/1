@@ -7,25 +7,10 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/asio/ssl.hpp>
-#include <boost/asio/steady_timer.hpp> // Include the steady_timer for delay
 #include <string>
 #include <memory>
 #include <thread>
 #include <vector>
-#include <chrono>
-
-void start_request_timer(boost::asio::steady_timer& timer, std::shared_ptr<Application> app, std::shared_ptr<Logger> logger) {
-    // Set the timer to expire after 10 seconds
-    timer.expires_after(std::chrono::seconds(10));
-    timer.async_wait([&timer, app, logger](const boost::system::error_code& /*ec*/) {
-        logger->log(LogLevel::INFO, "Executing GET request.");
-        std::string response = app->get();
-        logger->log(LogLevel::INFO, "Received response: " + response);
-
-        // Restart the timer for the next request
-        start_request_timer(timer, app, logger);
-    });
-}
 
 int main(int argc, char* argv[])
 {
@@ -53,7 +38,7 @@ int main(int argc, char* argv[])
     load_server_certificate(ctx);
 
     // Initialize the Application
-    auto app = std::make_shared<Application>();
+    auto app = std::make_shared<Application>(ioc);
 
     // Start the server to accept incoming connections
     logger->log(LogLevel::DEBUG, "Starting the server.");
@@ -63,10 +48,6 @@ int main(int argc, char* argv[])
         tcp::endpoint{address, port},
         doc_root);
     server_instance->run();
-
-    // Create a timer for recurring GET requests
-    boost::asio::steady_timer timer(ioc);
-    start_request_timer(timer, app, logger);
 
     // Run the I/O context in multiple threads
     std::vector<std::thread> v;

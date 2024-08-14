@@ -1,14 +1,16 @@
 #include "../include/application.hpp"
+#include "../../log/include/log.hpp" // Include the logger
 
 /**
- * @brief Constructs an Application object.
+ * @brief Constructs an Application object and starts the recurring GET request timer.
  * 
- * Initializes the SSL context and the client object.
+ * Initializes the SSL context, the client object, and starts the timer for recurring GET requests.
  */
-Application::Application()
-    : ssl_ctx_(ssl::context::tlsv12_client), client_(io_context_, ssl_ctx_), logger_(LoggerManager::getLogger("ApplicationLogger", LogLevel::DEBUG))
+Application::Application(boost::asio::io_context& ioc)
+    : io_context_(ioc), ssl_ctx_(ssl::context::tlsv12_client), client_(io_context_, ssl_ctx_), timer_(io_context_)
 {
-    logger_->log(LogLevel::INFO, "Application initialized.");
+    // Start the recurring timer when the application is constructed
+    start_timer();
 }
 
 /**
@@ -19,9 +21,27 @@ Application::Application()
  * @return The response body as a string.
  */
 std::string Application::get() {
-    logger_->log(LogLevel::INFO, "Sending GET request to localhost:8080/");
-    std::string response = client_.get("localhost", "8080", "/");
-    logger_->log(LogLevel::INFO, "Received response: " + response);
-    return response;
+    return client_.get("localhost", "8080", "/");
+}
+
+/**
+ * @brief Starts a recurring timer that executes a GET request every 10 seconds.
+ */
+void Application::start_timer() {
+    auto logger = LoggerManager::getLogger("ApplicationLogger", LogLevel::INFO, LogOutput::CONSOLE);
+
+    timer_.expires_after(std::chrono::seconds(10));
+    timer_.async_wait([this, logger](const boost::system::error_code& ec) {
+        if (!ec) {
+            logger->log(LogLevel::INFO, "Executing GET request after 10 seconds delay.");
+            std::string response = get();
+            logger->log(LogLevel::INFO, "Received response: " + response);
+
+            // Restart the timer for the next iteration
+            start_timer();
+        } else {
+            logger->log(LogLevel::ERROR, "Timer error: " + ec.message());
+        }
+    });
 }
 
