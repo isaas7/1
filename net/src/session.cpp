@@ -19,7 +19,7 @@ session::session(
     : stream_(std::move(socket), ctx)
     , doc_root_(doc_root)
 {
-    auto logger = LoggerManager::getLogger("session_logger", LogLevel::INFO);
+    auto logger = LoggerManager::getLogger("session_logger", LogLevel::DEBUG);
     logger->log(LogLevel::DEBUG, "Session created.");
 }
 

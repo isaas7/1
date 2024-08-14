@@ -7,10 +7,12 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/steady_timer.hpp> // Include the steady_timer for delay
 #include <string>
 #include <memory>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 int main(int argc, char* argv[])
 {
@@ -37,16 +39,25 @@ int main(int argc, char* argv[])
     ssl::context ctx{ssl::context::tlsv12};
     load_server_certificate(ctx);
 
-    // Initialize the Application with the shared io_context and SSL context
+    // Initialize the Application
     auto app = std::make_shared<Application>();
 
     // Start the server to accept incoming connections
     logger->log(LogLevel::DEBUG, "Starting the server.");
-    std::make_shared<server>(
+    auto server_instance = std::make_shared<server>(
         ioc,
         ctx,
         tcp::endpoint{address, port},
-        doc_root)->run();
+        doc_root);
+    server_instance->run();
+
+    // Create a timer to wait for 5 seconds before executing the request
+    boost::asio::steady_timer timer(ioc, std::chrono::seconds(5));
+    timer.async_wait([&app, &logger](const boost::system::error_code& /*ec*/) {
+        logger->log(LogLevel::INFO, "Executing GET request after 5 seconds delay.");
+        std::string response = app->get();
+        logger->log(LogLevel::INFO, "Received response: " + response);
+    });
 
     // Run the I/O context in multiple threads
     std::vector<std::thread> v;
