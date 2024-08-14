@@ -6,9 +6,9 @@
  * Initializes the SSL context and the client object.
  */
 Application::Application()
-    : ssl_ctx_(ssl::context::tlsv12_client), client_(io_context_, ssl_ctx_)
+    : ssl_ctx_(ssl::context::tlsv12_client), client_(io_context_, ssl_ctx_), logger_(LoggerManager::getLogger("ApplicationLogger", LogLevel::DEBUG))
 {
-    // Additional initialization if needed
+    logger_->log(LogLevel::INFO, "Application initialized.");
 }
 
 /**
@@ -19,6 +19,9 @@ Application::Application()
  * @return The response body as a string.
  */
 std::string Application::get() {
-    return client_.get("localhost", "8080", "/");
+    logger_->log(LogLevel::INFO, "Sending GET request to localhost:8080/");
+    std::string response = client_.get("localhost", "8080", "/");
+    logger_->log(LogLevel::INFO, "Received response: " + response);
+    return response;
 }
 
