@@ -18,10 +18,13 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
-namespace beast = boost::beast;                 // from <boost/beast.hpp>
-namespace http = beast::http;                   // from <boost/beast/http.hpp>
-namespace net = boost::asio;
-namespace ssl = boost::asio::ssl;
-using tcp = boost::asio::ip::tcp;
 
-#endif
+// Namespace aliases for Boost.Beast and Boost.Asio components.
+namespace beast = boost::beast;                 // Namespace for Boost.Beast, provides core I/O and HTTP functionality.
+namespace http = beast::http;                   // Namespace for HTTP-related classes and functions in Boost.Beast.
+namespace net = boost::asio;                    // Namespace for Boost.Asio, provides I/O functionality.
+namespace ssl = boost::asio::ssl;               // Namespace for SSL-related classes and functions in Boost.Asio.
+using tcp = boost::asio::ip::tcp;               // Alias for TCP socket type in Boost.Asio.
+
+#endif // BEAST_HPP
+
