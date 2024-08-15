@@ -31,7 +31,7 @@ To run the application, use the following command:
 make run
 ```
 
-Directory Structure
+## Directory Structure
 
 The project is organized into the following main directories:
 
