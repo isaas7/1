@@ -1,8 +1,9 @@
 #include "../include/websocket_session.hpp"
-#include <boost/beast/core/bind_handler.hpp>
 #include "../include/utils.hpp"
-websocket_session::websocket_session(tcp::socket socket, ssl::context& ctx)
-    : ws_(std::move(socket), ctx), logger_(LoggerManager::getLogger("WebSocketSession"))
+#include <boost/beast/core/bind_handler.hpp>
+
+websocket_session::websocket_session(tcp::socket socket, ssl::context& ctx, std::shared_ptr<Logger> logger)
+    : ws_(std::move(socket), ctx), logger_(logger)
 {
     logger_->log(LogLevel::DEBUG, "WebSocket session created.");
 }
@@ -10,6 +11,7 @@ websocket_session::websocket_session(tcp::socket socket, ssl::context& ctx)
 void websocket_session::run()
 {
     logger_->log(LogLevel::DEBUG, "Starting WebSocket session.");
+    // Perform the SSL handshake
     ws_.next_layer().async_handshake(
         ssl::stream_base::server,
         boost::beast::bind_front_handler(

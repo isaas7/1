@@ -1,16 +1,18 @@
 #include "../include/websocket_listener.hpp"
-#include "../include/websocket_session.hpp" // Include the WebSocket session header
 #include "../include/utils.hpp"
-#include <boost/system/error_code.hpp>
+#include <boost/beast/core.hpp>
 
 websocket_listener::websocket_listener(
     boost::asio::io_context& ioc,
     ssl::context& ctx,
-    tcp::endpoint endpoint)
+    tcp::endpoint endpoint,
+    std::shared_ptr<Logger> logger,
+    std::shared_ptr<Logger> session_logger)
     : ctx_(ctx)
     , acceptor_(ioc)
     , socket_(ioc)
-    , logger_(LoggerManager::getLogger("WebSocketListener"))
+    , logger_(logger)
+    , session_logger_(session_logger)
 {
     boost::system::error_code ec;
 
@@ -42,8 +44,7 @@ websocket_listener::websocket_listener(
     }
 
     // Start listening for connections
-    acceptor_.listen(
-        boost::asio::socket_base::max_listen_connections, ec);
+    acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
     if (ec)
     {
         logger_->log(LogLevel::ERROR, "Failed to listen on acceptor: " + ec.message());
@@ -82,8 +83,8 @@ void websocket_listener::on_accept(boost::system::error_code ec)
     else
     {
         logger_->log(LogLevel::DEBUG, "Connection accepted. Starting WebSocket session.");
-        // Create the session and run it
-        std::make_shared<websocket_session>(std::move(socket_), ctx_)->run();
+        // Create the session and run it, passing the session logger
+        std::make_shared<websocket_session>(std::move(socket_), ctx_, session_logger_)->run();
     }
 
     // Accept another connection

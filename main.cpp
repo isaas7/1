@@ -41,12 +41,19 @@ int main(int argc, char* argv[])
     // Initialize the Application
     auto app = std::make_shared<Application>(ioc);
 
+    // Create loggers for WebSocket listener and session
+    auto websocket_listener_logger = LoggerManager::getLogger("WebSocketListenerLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    auto websocket_session_logger = LoggerManager::getLogger("WebSocketSessionLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
+
     // Start the WebSocket listener to accept incoming WebSocket connections
     logger->log(LogLevel::DEBUG, "Starting the WebSocket listener.");
     auto websocket_instance = std::make_shared<websocket_listener>(
         ioc,
         ctx,
-        tcp::endpoint{address, static_cast<unsigned short>(port + 1)});  // Using the next port for WebSocket
+        tcp::endpoint{address, static_cast<unsigned short>(port + 1)},
+        websocket_listener_logger,
+        websocket_session_logger // Pass the session logger to the listener, which will pass it to sessions
+    );
     websocket_instance->run();
 
     // Start the server to accept incoming connections
