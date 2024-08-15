@@ -1,14 +1,20 @@
-# Beastapp
+# beastapp
 
 ## Project Description
 
-**Beastapp** 
+**beastapp** is a versatile and scalable C++ application built on top of the Boost.Beast library. It provides a robust framework for handling HTTP and WebSocket communications with a focus on security, using SSL/TLS for encrypted connections. Designed for high-performance networking, **beastapp** is ideal for building server-side applications that require secure and efficient client-server communication.
 
+The application is organized into distinct modules that handle various aspects of the networking stack, from managing SSL certificates to handling HTTP requests and WebSocket sessions. **beastapp's** modular architecture makes it easy to extend and customize, whether you're building a web server, an API service, or a real-time communication platform.
 ## Getting Started
 
 ### Prerequisites
 
-- [List of prerequisites]
+- c++17 or later
+- Boost Libraries (specifically, boost_system, boost_filesystem, boost_thread, boost_asio, boost_beast)
+- OpenSSL (provides SSL/TLS support)
+- libcrypto (OpenSSL cryptographic library)
+- make (for building the project)
+- g++ or clang++ (C++ compiler)
 
 ### Installation
 
@@ -16,11 +22,6 @@
     ```bash
     git clone https://github.com/diyooor/beastapp.git
     ```
-2. [Installation steps]
-
-### Usage
-
-[Instructions on how to use the application]
 
 ### Running the Application
 
@@ -76,13 +77,10 @@ The `log` directory is responsible for logging functionality. It contains the lo
 
 ## Contributing
 
-[Instructions for contributing]
 
 ## License
 
-[License information]
 
 ## Acknowledgments
 
-[Credits and acknowledgments]
 
