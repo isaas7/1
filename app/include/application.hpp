@@ -1,33 +1,31 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 
-#include "../../net/include/client.hpp"
-#include <boost/asio/steady_timer.hpp>
+#include <boost/asio.hpp>
+#include <string>
+#include "../../net/include/ollama.hpp" // Include the Ollama class
 
 class Application {
 public:
-    /**
-     * @brief Constructs an Application object and starts the recurring GET request timer.
-     */
     Application(boost::asio::io_context& ioc);
 
     /**
-     * @brief Performs an HTTP GET request to localhost:8080/.
+     * @brief Performs an LLM query using the Ollama class with the given prompt.
      * 
+     * @param prompt The prompt to send to the LLM.
      * @return The response body as a string.
      */
-    std::string get();
+    std::string query_llm(const std::string& prompt);
 
 private:
     /**
-     * @brief Starts a recurring timer that executes a GET request every 10 seconds.
+     * @brief Starts a recurring timer that executes a GET request every 60 seconds.
      */
     void start_timer();
 
-    boost::asio::io_context& io_context_;  // The I/O context used for network operations.
-    ssl::context ssl_ctx_;                // The SSL context used for managing SSL connections.
-    Client client_;                       // The client object used to send HTTP requests.
-    boost::asio::steady_timer timer_;     // Timer to schedule recurring tasks.
+    boost::asio::io_context& io_context_;
+    Ollama ollama_;  // Ollama instance for making LLM queries
+    boost::asio::steady_timer timer_;
 };
 
 #endif // APPLICATION_HPP
