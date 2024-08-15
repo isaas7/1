@@ -49,80 +49,29 @@ The `log` directory is responsible for logging functionality. It contains the lo
 ## Output
 
 ```bash
-2024-08-14 15:35:54 - INFO [ClientLogger] Client initialized.
-2024-08-14 15:35:54 - INFO [ApplicationLogger] Application initialized.
-2024-08-14 15:36:04 - INFO [MainLogger] Executing GET request.
-2024-08-14 15:36:04 - INFO [ApplicationLogger] Sending GET request to localhost:8080/
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Performing GET request to localhost:8080/
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Resolving localhost:8080
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Connecting to resolved address.
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Performing SSL handshake.
-2024-08-14 15:36:04 - DEBUG [session_logger] Session created.
-2024-08-14 15:36:04 - DEBUG [session_logger] Running session.
-2024-08-14 15:36:04 - DEBUG [session_logger] Starting SSL handshake.
-2024-08-14 15:36:04 - DEBUG [session_logger] Handshake successful.
-2024-08-14 15:36:04 - DEBUG [session_logger] Reading request.
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Sending HTTP request.
-2024-08-14 15:36:04 - DEBUG [ClientLogger] Receiving HTTP response.
-2024-08-14 15:36:04 - DEBUG [session_logger] Request received successfully.
-2024-08-14 15:36:04 - DEBUG [session_logger] Sending response.
-2024-08-14 15:36:04 - DEBUG [session_logger] Response sent successfully.
-2024-08-14 15:36:04 - INFO [ClientLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:04 - DEBUG [session_logger] Reading request.
-2024-08-14 15:36:04 - INFO [ApplicationLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:04 - INFO [MainLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:04 - ERROR [session_logger] Error reading request: stream truncated
-2024-08-14 15:36:14 - INFO [MainLogger] Executing GET request.
-2024-08-14 15:36:14 - INFO [ApplicationLogger] Sending GET request to localhost:8080/
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Performing GET request to localhost:8080/
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Resolving localhost:8080
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Connecting to resolved address.
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Performing SSL handshake.
-2024-08-14 15:36:14 - DEBUG [session_logger] Session created.
-2024-08-14 15:36:14 - DEBUG [session_logger] Running session.
-2024-08-14 15:36:14 - DEBUG [session_logger] Starting SSL handshake.
-2024-08-14 15:36:14 - DEBUG [session_logger] Handshake successful.
-2024-08-14 15:36:14 - DEBUG [session_logger] Reading request.
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Sending HTTP request.
-2024-08-14 15:36:14 - DEBUG [ClientLogger] Receiving HTTP response.
-2024-08-14 15:36:14 - DEBUG [session_logger] Request received successfully.
-2024-08-14 15:36:14 - DEBUG [session_logger] Sending response.
-2024-08-14 15:36:14 - DEBUG [session_logger] Response sent successfully.
-2024-08-14 15:36:14 - DEBUG [session_logger] Reading request.
-2024-08-14 15:36:14 - INFO [ClientLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:14 - INFO [ApplicationLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:14 - INFO [MainLogger] Received response: <html>
-    <body>
-        helloworld
-    </body>
-</html>
-
-2024-08-14 15:36:14 - ERROR [session_logger] Error reading request: stream truncated
+./bin/main 0.0.0.0 8080 www 2
+2024-08-14 21:31:34 - DEBUG [MainLogger] Parsing command line arguments.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Initializing io_context.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Initializing SSL context.
+2024-08-14 21:31:34 - INFO [ClientLogger] Client initialized.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Starting the WebSocket listener.
+2024-08-14 21:31:34 - DEBUG [WebSocketListenerLogger] WebSocket listener started on 0.0.0.0:8081
+2024-08-14 21:31:34 - DEBUG [WebSocketListenerLogger] WebSocket listener is ready to accept connections.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Starting the HTTP server.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Running io_context in the main thread.
+2024-08-14 21:31:34 - DEBUG [MainLogger] Running io_context in a thread.
+2024-08-14 21:31:52 - DEBUG [WebSocketListenerLogger] Connection accepted. Starting WebSocket session.
+2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] WebSocket session created.
+2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] Starting WebSocket session.
+2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] SSL handshake successful.
+2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] WebSocket handshake successful. Waiting for messages.
+2024-08-14 21:31:55 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
+2024-08-14 21:31:55 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
+2024-08-14 21:31:56 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
+2024-08-14 21:31:56 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
+2024-08-14 21:31:57 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
+2024-08-14 21:31:57 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
+2024-08-14 21:31:58 - ERROR [WebSocketSessionLogger] Error reading WebSocket message: stream truncated
 ```
 
 ## Contributing
