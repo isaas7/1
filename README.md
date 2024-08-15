@@ -51,28 +51,19 @@ The `log` directory is responsible for logging functionality. It contains the lo
 
 ```bash
 ./bin/main 0.0.0.0 8080 www 2
-2024-08-14 21:31:34 - DEBUG [MainLogger] Parsing command line arguments.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Initializing io_context.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Initializing SSL context.
-2024-08-14 21:31:34 - INFO [ClientLogger] Client initialized.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Starting the WebSocket listener.
-2024-08-14 21:31:34 - DEBUG [WebSocketListenerLogger] WebSocket listener started on 0.0.0.0:8081
-2024-08-14 21:31:34 - DEBUG [WebSocketListenerLogger] WebSocket listener is ready to accept connections.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Starting the HTTP server.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Running io_context in the main thread.
-2024-08-14 21:31:34 - DEBUG [MainLogger] Running io_context in a thread.
-2024-08-14 21:31:52 - DEBUG [WebSocketListenerLogger] Connection accepted. Starting WebSocket session.
-2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] WebSocket session created.
-2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] Starting WebSocket session.
-2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] SSL handshake successful.
-2024-08-14 21:31:52 - DEBUG [WebSocketSessionLogger] WebSocket handshake successful. Waiting for messages.
-2024-08-14 21:31:55 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
-2024-08-14 21:31:55 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
-2024-08-14 21:31:56 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
-2024-08-14 21:31:56 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
-2024-08-14 21:31:57 - DEBUG [WebSocketSessionLogger] Received WebSocket message: test
-2024-08-14 21:31:57 - DEBUG [WebSocketSessionLogger] WebSocket message sent successfully. Clearing buffer and reading next message.
-2024-08-14 21:31:58 - ERROR [WebSocketSessionLogger] Error reading WebSocket message: stream truncated
+2024-08-15 08:01:23 - DEBUG [MainLogger] Parsing command line arguments.
+llava:latest
+llama3.1:latest
+2024-08-15 08:01:23 - DEBUG [MainLogger] Initializing io_context.
+2024-08-15 08:01:23 - DEBUG [MainLogger] Initializing SSL context.
+2024-08-15 08:01:23 - DEBUG [MainLogger] Starting the WebSocket listener.
+2024-08-15 08:01:23 - DEBUG [WebSocketListenerLogger] WebSocket listener started on 0.0.0.0:8081
+2024-08-15 08:01:23 - DEBUG [WebSocketListenerLogger] WebSocket listener is ready to accept connections.
+2024-08-15 08:01:23 - DEBUG [MainLogger] Starting the HTTP server.
+2024-08-15 08:01:23 - DEBUG [MainLogger] Running io_context in the main thread.
+2024-08-15 08:01:23 - DEBUG [MainLogger] Running io_context in a thread.
+2024-08-15 08:01:33 - INFO [ApplicationLogger] Executing LLM query after 60 seconds delay.
+2024-08-15 08:02:31 - INFO [ApplicationLogger] Received response from LLM:  The sky appears blue because of a process called scattering. As sunlight travels through Earth's atmosphere, it interacts with molecules and particles that are present in the air, such as nitrogen and oxygen gases. This interaction causes the light to be scattered in all directions. Blue light has shorter wavelengths and is more easily scattered than other colors of light, which is why we see the sky as blue.
 ```
 
 ## Contributing
