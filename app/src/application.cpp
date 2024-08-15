@@ -30,7 +30,7 @@ std::string Application::get() {
 void Application::start_timer() {
     auto logger = LoggerManager::getLogger("ApplicationLogger", LogLevel::INFO, LogOutput::CONSOLE);
 
-    timer_.expires_after(std::chrono::seconds(10));
+    timer_.expires_after(std::chrono::seconds(60));
     timer_.async_wait([this, logger](const boost::system::error_code& ec) {
         if (!ec) {
             logger->log(LogLevel::INFO, "Executing GET request after 10 seconds delay.");

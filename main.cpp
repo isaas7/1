@@ -1,9 +1,10 @@
+#include "net/include/utils.hpp"
 #include "net/include/server_certificate.hpp"
 #include "net/include/http_tools.hpp"
 #include "net/include/server.hpp"
 #include "app/include/application.hpp"
 #include "log/include/log.hpp" // Include the logger
-
+#include "net/include/websocket_listener.hpp"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/asio/ssl.hpp>
@@ -14,7 +15,7 @@
 
 int main(int argc, char* argv[])
 {
-    auto logger = LoggerManager::getLogger("MainLogger", LogLevel::INFO, LogOutput::CONSOLE);
+    auto logger = LoggerManager::getLogger("MainLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
 
     if (argc != 5)
     {
@@ -40,8 +41,16 @@ int main(int argc, char* argv[])
     // Initialize the Application
     auto app = std::make_shared<Application>(ioc);
 
+    // Start the WebSocket listener to accept incoming WebSocket connections
+    logger->log(LogLevel::DEBUG, "Starting the WebSocket listener.");
+    auto websocket_instance = std::make_shared<websocket_listener>(
+        ioc,
+        ctx,
+        tcp::endpoint{address, static_cast<unsigned short>(port + 1)});  // Using the next port for WebSocket
+    websocket_instance->run();
+
     // Start the server to accept incoming connections
-    logger->log(LogLevel::DEBUG, "Starting the server.");
+    logger->log(LogLevel::DEBUG, "Starting the HTTP server.");
     auto server_instance = std::make_shared<server>(
         ioc,
         ctx,
