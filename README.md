@@ -1,13 +1,15 @@
 # beastapp
 
 ### 16 August 2024 Todo
-    - LLM querying
-        - [x] query in application
-        - app->query in [] websocket / [x] http  (post) 
-        - [] use partial responses
-        -  
-    - Queue
-        - add llm queries to queue
+
+- LLM querying
+    - [x] query in application
+    - [] app->query in websocket  
+    - [x] http(post) app->query
+    - [] use partial responses
+    -  
+- Queue
+    - add llm queries to queue
 
 ## Project Description
 
