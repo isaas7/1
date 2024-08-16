@@ -1,5 +1,9 @@
 # beastapp
 
+## Demo
+
+![Alt text](img/demo.gif)
+
 ### 16 August 2024 Todo
 
 - LLM querying
