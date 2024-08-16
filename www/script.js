@@ -6,6 +6,9 @@ document.getElementById('sendQueryButton').addEventListener('click', function() 
         return;
     }
 
+    // Display the sent message
+    addMessage(queryInput, 'right');
+
     sendQuery(queryInput);
 });
 
@@ -33,7 +36,9 @@ function sendQuery(query) {
 }
 
 function fetchQueryUpdates(queryId) {
-    let previousResponses = [];
+    let previousResponsesLength = 0;
+    let currentResponseText = '';
+    let messageDiv;
 
     const interval = setInterval(() => {
         fetch(`/query_status/${queryId}`)
@@ -52,16 +57,21 @@ function fetchQueryUpdates(queryId) {
             const completed = status.completed;
             const newResponses = status.partial_responses;
 
-            // Update the UI only with the new responses
-            const responseContainer = document.getElementById('queryResponses');
-            newResponses.slice(previousResponses.length).forEach(response => {
-                const para = document.createElement('p');
-                para.innerText = response;
-                responseContainer.appendChild(para);
+            // Create a new message div on first response
+            if (!messageDiv) {
+                messageDiv = addMessage('', 'left');
+            }
+
+            // Append only the new words to the current response text
+            newResponses.slice(previousResponsesLength).forEach(response => {
+                currentResponseText += response + ' ';
             });
 
-            // Update the previousResponses array to track already displayed responses
-            previousResponses = newResponses;
+            // Update the text content of the existing message div
+            messageDiv.innerText = currentResponseText.trim();
+
+            // Update the previousResponsesLength to track the length of responses already processed
+            previousResponsesLength = newResponses.length;
 
             // Stop fetching if the query is completed
             if (completed) {
@@ -76,5 +86,28 @@ function fetchQueryUpdates(queryId) {
             clearInterval(interval);
         });
     }, 1000);
+}
+
+function addMessage(message, alignment) {
+    const responseContainer = document.getElementById('queryResponses');
+    const para = document.createElement('div');
+    para.classList.add('response', alignment);
+
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('response-text', alignment === 'right' ? 'right' : 'left');
+    messageDiv.innerText = message;
+
+    const timestamp = document.createElement('div');
+    timestamp.classList.add('timestamp');
+    timestamp.innerText = new Date().toLocaleTimeString();
+
+    messageDiv.appendChild(timestamp);
+    para.appendChild(messageDiv);
+    responseContainer.appendChild(para);
+
+    // Scroll to the bottom of the chat box
+    responseContainer.scrollTop = responseContainer.scrollHeight;
+
+    return messageDiv; // Return the message div for further updates
 }
 

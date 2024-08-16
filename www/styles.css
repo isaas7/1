@@ -17,6 +17,9 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     max-width: 600px;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
 }
 
 h1 {
@@ -25,18 +28,71 @@ h1 {
     text-align: center;
 }
 
+.responses {
+    flex: 1;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    word-wrap: break-word;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 100%;
+}
+
+.response {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.response.right {
+    justify-content: flex-end;
+}
+
+.response-text {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: #fff;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.response-text.left {
+    background-color: #ccc;
+    color: #333;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+.message-box {
+    display: flex;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
 textarea {
-    width: 100%;
-    height: 100px;
+    width: calc(100% - 120px);
+    height: 50px;
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ddd;
-    margin-bottom: 10px;
+    margin-right: 10px;
     font-size: 16px;
+    resize: none;
 }
 
 button {
-    width: 100%;
+    width: 100px;
     padding: 10px;
     background-color: #007BFF;
     color: #fff;
@@ -48,31 +104,5 @@ button {
 
 button:hover {
     background-color: #0056b3;
-}
-
-.status {
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-.responses {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f1f1f1;
-    border-radius: 5px;
-    height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    max-width: 100%;
-    word-wrap: break-word;
-    font-size: 16px;
-    line-height: 1.5;
-}
-
-.responses p {
-    margin: 0;
-    padding: 0;
-    display: inline;
-    word-break: break-word;
 }
 
