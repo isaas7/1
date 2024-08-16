@@ -1,15 +1,20 @@
 document.getElementById('sendQueryButton').addEventListener('click', function() {
-    const queryInput = document.getElementById('queryInput').value;
+    const queryInput = document.getElementById('queryInput');
+    const queryText = queryInput.value.trim();
 
-    if (!queryInput) {
+    if (!queryText) {
         alert("Please enter a query.");
         return;
     }
 
     // Display the sent message
-    addMessage(queryInput, 'right');
+    addMessage(queryText, 'right');
 
-    sendQuery(queryInput);
+    // Clear the input box
+    queryInput.value = '';
+
+    // Send the query
+    sendQuery(queryText);
 });
 
 function sendQuery(query) {
