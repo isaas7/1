@@ -1,6 +1,7 @@
 #ifndef HTTP_TOOLS_HPP
 #define HTTP_TOOLS_HPP
 
+#include "../../app/include/application.hpp"
 #include "beast.hpp"
 #include <boost/config.hpp>
 #include <boost/asio/dispatch.hpp>
@@ -40,7 +41,8 @@ std::string path_cat(beast::string_view base, beast::string_view path);
 template <class Body, class Allocator>
 boost::beast::http::message_generator handle_request(
     beast::string_view doc_root,
-    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req);
+    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app);
 
 #endif // HTTP_TOOLS_HPP
 

@@ -1,6 +1,7 @@
 #include "../include/http_tools.hpp"
 #include "../include/utils.hpp"
 #include "../../log/include/log.hpp"
+#include "../include/ollama.hpp"
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -49,14 +50,46 @@ http::response<http::string_body> send_(
  * @param req The POST request object.
  * @param logger A shared pointer to the logger used for logging.
  * @return The HTTP response as a message generator.
+ *
+ * @problem response times out if message is too big
  */
 template <class Body, class Allocator>
 http::message_generator handle_post_request(
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+    http::request<Body, http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
-    logger->log(LogLevel::DEBUG, "Received POST request for target: " + std::string(req.target()));
-    return send_(req, http::status::ok, R"({"message": "POST request processed"})");
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level); 
+    try {
+        // Parse the JSON body to extract the "message" field
+        auto json_obj = nlohmann::json::parse(req.body());
+        
+        // Check if the "message" field exists
+        if (json_obj.contains("message")) {
+            std::string prompt = json_obj["message"].template get<std::string>();
+            logger->log(LogLevel::DEBUG, "Received LLM prompt: " + prompt);
+
+            // Query the LLM using the Application's Ollama instance
+            std::string response_str = app->query_llm(prompt);
+            logger->log(LogLevel::DEBUG, "LLM response: " + response_str);
+
+            // Create a JSON response containing the LLM's response
+            nlohmann::json response_json;
+            response_json["response"] = response_str;
+
+            // Send the response back to the client
+            return send_(req, http::status::ok, response_json.dump(), "application/json");
+        } else {
+            logger->log(LogLevel::ERROR, R"({"error": "Missing 'message' field in JSON request."})");
+            return send_(req, http::status::bad_request, R"({"error": "Missing 'message' field in JSON request."})");
+        }
+        
+    } catch (const nlohmann::json::exception& e) {
+        logger->log(LogLevel::ERROR, "JSON parsing exception: " + std::string(e.what()));
+        return send_(req, http::status::bad_request, R"({"error": "Invalid JSON format."})");
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Exception caught: " + std::string(e.what()));
+        return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
+    }
 }
 
 /**
@@ -141,14 +174,15 @@ http::message_generator handle_get_request(
 template <class Body, class Allocator>
 http::message_generator handle_request(
     beast::string_view doc_root,
-    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req)
+    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
     
     if (req.method() == http::verb::post && req.target() == "/") {
         logger->log(LogLevel::DEBUG, "Delegating to handle_post_request.");
-        return handle_post_request(std::move(req));
+        return handle_post_request(std::move(req), app);
     } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
         logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
         return handle_get_request(doc_root, std::move(req));
@@ -230,5 +264,6 @@ std::string path_cat(beast::string_view base, beast::string_view path)
 // Explicit template instantiation for string body requests
 template http::message_generator handle_request<http::string_body, std::allocator<char>>(
     beast::string_view doc_root,
-    http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req);
+    http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
+    std::shared_ptr<Application> app);
 

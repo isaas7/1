@@ -1,6 +1,6 @@
 #include "../include/application.hpp"
 #include "../../log/include/log.hpp" // Include the logger
-
+#include "../../net/include/ollama.hpp"
 /**
  * @brief Constructs an Application object and starts the recurring GET request timer.
  * 
@@ -9,8 +9,10 @@
 Application::Application(boost::asio::io_context& ioc)
     : io_context_(ioc), ollama_("http://localhost:11434"), timer_(io_context_)
 {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    logger->log(LogLevel::DEBUG, "Initializing app.");
     // Start the recurring timer when the application is constructed
-    start_timer();
+    //start_timer();
 }
 
 /**
@@ -52,3 +54,4 @@ void Application::start_timer() {
     });
 }
 
+Ollama& Application::get_ollama() { return ollama_; }

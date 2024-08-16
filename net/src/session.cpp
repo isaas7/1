@@ -13,11 +13,13 @@
  * @param doc_root The document root directory for serving files.
  */
 session::session(
-    tcp::socket&& socket,
-    ssl::context& ctx,
-    std::shared_ptr<std::string const> const& doc_root)
+        tcp::socket&& socket,
+        ssl::context& ctx,
+        std::shared_ptr<std::string const> const& doc_root, 
+        std::shared_ptr<Application> app)
     : stream_(std::move(socket), ctx)
     , doc_root_(doc_root)
+      , app_(app)
 {
     auto logger = LoggerManager::getLogger("session_logger", LogLevel::DEBUG);
     logger->log(LogLevel::DEBUG, "Session created.");
@@ -32,10 +34,10 @@ void session::run()
     logger->log(LogLevel::DEBUG, "Running session.");
 
     net::dispatch(
-        stream_.get_executor(),
-        beast::bind_front_handler(
-            &session::on_run,
-            shared_from_this()));
+            stream_.get_executor(),
+            beast::bind_front_handler(
+                &session::on_run,
+                shared_from_this()));
 }
 
 /**
@@ -49,13 +51,13 @@ void session::on_run()
     logger->log(LogLevel::DEBUG, "Starting SSL handshake.");
 
     beast::get_lowest_layer(stream_).expires_after(
-        std::chrono::seconds(30));
+            std::chrono::seconds(30));
 
     stream_.async_handshake(
-        ssl::stream_base::server,
-        beast::bind_front_handler(
-            &session::on_handshake,
-            shared_from_this()));
+            ssl::stream_base::server,
+            beast::bind_front_handler(
+                &session::on_handshake,
+                shared_from_this()));
 }
 
 /**
@@ -93,9 +95,9 @@ void session::do_read()
     beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 
     http::async_read(stream_, buffer_, req_,
-        beast::bind_front_handler(
-            &session::on_read,
-            shared_from_this()));
+            beast::bind_front_handler(
+                &session::on_read,
+                shared_from_this()));
 }
 
 /**
@@ -123,7 +125,7 @@ void session::on_read(boost::beast::error_code ec, std::size_t bytes_transferred
 
     logger->log(LogLevel::DEBUG, "Request received successfully.");
     send_response(
-        handle_request(*doc_root_, std::move(req_)));
+            handle_request(*doc_root_, std::move(req_), app_));
 }
 
 /**
@@ -139,10 +141,10 @@ void session::send_response(http::message_generator&& msg)
     bool keep_alive = msg.keep_alive();
 
     beast::async_write(
-        stream_,
-        std::move(msg),
-        beast::bind_front_handler(
-            &session::on_write, this->shared_from_this(), keep_alive));
+            stream_,
+            std::move(msg),
+            beast::bind_front_handler(
+                &session::on_write, this->shared_from_this(), keep_alive));
 }
 
 /**
@@ -188,9 +190,9 @@ void session::do_close()
     beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 
     stream_.async_shutdown(
-        beast::bind_front_handler(
-            &session::on_shutdown,
-            shared_from_this()));
+            beast::bind_front_handler(
+                &session::on_shutdown,
+                shared_from_this()));
 }
 
 /**

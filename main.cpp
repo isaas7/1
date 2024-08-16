@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         ctx,
         tcp::endpoint{address, static_cast<unsigned short>(port + 1)},
         websocket_listener_logger,
-        websocket_session_logger // Pass the session logger to the listener, which will pass it to sessions
+        websocket_session_logger // Pass the session logger to the listener, which will pass it to sessions 
     );
     websocket_instance->run();
 
@@ -84,7 +84,8 @@ int main(int argc, char* argv[])
         ioc,
         ctx,
         tcp::endpoint{address, port},
-        doc_root);
+        doc_root,
+        app);
     server_instance->run();
 
     // Run the I/O context in multiple threads

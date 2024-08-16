@@ -16,11 +16,13 @@ server::server(
     boost::asio::io_context& ioc,
     boost::asio::ssl::context& ctx,
     boost::asio::ip::tcp::endpoint endpoint,
-    std::shared_ptr<std::string const> const& doc_root)
+    std::shared_ptr<std::string const> const& doc_root,
+    std::shared_ptr<Application> app)
     : ioc_(ioc)
     , ctx_(ctx)
     , acceptor_(ioc)
     , doc_root_(doc_root)
+    , app_(app)
 {
     auto logger = LoggerManager::getLogger("server_logger", LogLevel::INFO, LogOutput::CONSOLE);
     logger->log(LogLevel::DEBUG, "Initializing server.");
@@ -116,7 +118,7 @@ void server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket
         logger->log(LogLevel::DEBUG, "Connection accepted.");
         
         // Create a new session and start it
-        std::make_shared<session>(std::move(socket), ctx_, doc_root_)->run();
+        std::make_shared<session>(std::move(socket), ctx_, doc_root_, app_)->run();
     }
     else
     {

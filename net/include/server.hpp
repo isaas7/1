@@ -37,6 +37,7 @@ class server : public std::enable_shared_from_this<server>
     boost::asio::ip::tcp::acceptor acceptor_;  ///< Acceptor object used to listen for incoming connections.
     std::shared_ptr<std::string const> doc_root_;  ///< Shared pointer to the document root directory.
     std::shared_ptr<Logger> logger_;
+    std::shared_ptr<Application> app_;
 public:
     /**
      * @brief Constructs the server object.
@@ -51,7 +52,8 @@ public:
         boost::asio::io_context& ioc,
         boost::asio::ssl::context& ctx,
         boost::asio::ip::tcp::endpoint endpoint,
-        std::shared_ptr<std::string const> const& doc_root);
+        std::shared_ptr<std::string const> const& doc_root,
+        std::shared_ptr<Application> app);
 
     /**
      * @brief Starts the server to begin accepting incoming connections.

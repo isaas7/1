@@ -1,6 +1,7 @@
 #ifndef SESSION_HPP
 #define SESSION_HPP
 
+#include "../../app/include/application.hpp"
 #include "http_tools.hpp"
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -21,7 +22,7 @@ class session : public std::enable_shared_from_this<session>
     boost::beast::flat_buffer buffer_;  // Buffer for reading requests
     std::shared_ptr<std::string const> doc_root_;  // Document root directory
     boost::beast::http::request<boost::beast::http::string_body> req_;  // HTTP request object
-
+    std::shared_ptr<Application> app_;
 public:
     /**
      * @brief Constructs a session object.
@@ -35,7 +36,8 @@ public:
     session(
         boost::asio::ip::tcp::socket&& socket,
         boost::asio::ssl::context& ctx,
-        std::shared_ptr<std::string const> const& doc_root);
+        std::shared_ptr<std::string const> const& doc_root,
+        std::shared_ptr<Application> app);
 
     /**
      * @brief Starts the session by initiating the SSL handshake.
