@@ -4,9 +4,8 @@
 
 - LLM querying
     - [x] query in application
-    - [] app->query in websocket  
     - [x] http(post) app->query
-    - [] use partial responses
+    - [x] use partial responses
     -  
 - Queue
     - add llm queries to queue

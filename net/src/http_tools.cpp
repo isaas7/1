@@ -58,31 +58,26 @@ http::message_generator handle_post_request(
     http::request<Body, http::basic_fields<Allocator>>&& req,
     std::shared_ptr<Application> app)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level); 
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     try {
-        // Parse the JSON body to extract the "message" field
         auto json_obj = nlohmann::json::parse(req.body());
-        
-        // Check if the "message" field exists
+
         if (json_obj.contains("message")) {
             std::string prompt = json_obj["message"].template get<std::string>();
             logger->log(LogLevel::DEBUG, "Received LLM prompt: " + prompt);
 
-            // Query the LLM using the Application's Ollama instance
-            std::string response_str = app->query_llm(prompt);
-            logger->log(LogLevel::DEBUG, "LLM response: " + response_str);
+            // Add the query to the queue and get the query ID
+            std::string query_id = app->add_query(prompt);
 
-            // Create a JSON response containing the LLM's response
             nlohmann::json response_json;
-            response_json["response"] = response_str;
+            response_json["query_id"] = query_id;
+            response_json["status"] = "Query added to the queue";
 
-            // Send the response back to the client
             return send_(req, http::status::ok, response_json.dump(), "application/json");
         } else {
             logger->log(LogLevel::ERROR, R"({"error": "Missing 'message' field in JSON request."})");
             return send_(req, http::status::bad_request, R"({"error": "Missing 'message' field in JSON request."})");
         }
-        
     } catch (const nlohmann::json::exception& e) {
         logger->log(LogLevel::ERROR, "JSON parsing exception: " + std::string(e.what()));
         return send_(req, http::status::bad_request, R"({"error": "Invalid JSON format."})");
@@ -91,6 +86,7 @@ http::message_generator handle_post_request(
         return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
     }
 }
+
 
 /**
  * @brief Handle an HTTP GET request and serve the requested file.
@@ -103,16 +99,39 @@ http::message_generator handle_post_request(
 template <class Body, class Allocator>
 http::message_generator handle_get_request(
     beast::string_view doc_root,
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+    http::request<Body, http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)  // Added the Application shared pointer
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received GET request for target: " + std::string(req.target()));
-    
+
     try {
-        std::string path = path_cat(doc_root, req.target());
+        // Extract the target path
+        std::string target = std::string(req.target());
+
+        // Check if the request is for querying the status of a query
+        if (target.rfind("/query_status/", 0) == 0) {
+            // Extract the query ID from the URL (e.g., /query_status/{query_id})
+            std::string query_id = target.substr(14);  // 14 is the length of "/query_status/"
+            logger->log(LogLevel::DEBUG, "Query status request for query_id: " + query_id);
+
+            // Get the status from the Application
+            std::string status = app->get_query_status(query_id);
+
+            // Create a JSON response with the query status
+            nlohmann::json response_json;
+            response_json["query_id"] = query_id;
+            response_json["status"] = status;
+
+            // Send the JSON response back to the client
+            return send_(req, http::status::ok, response_json.dump(), "application/json");
+        }
+
+        // If not a query status request, proceed with serving a file
+        std::string path = path_cat(doc_root, target);
         logger->log(LogLevel::DEBUG, "Computed path: " + path);
 
-        if (req.target().back() == '/') {
+        if (target.back() == '/') {
             path.append("index.html");
             logger->log(LogLevel::DEBUG, "Appended index.html to path: " + path);
         }
@@ -147,8 +166,8 @@ http::message_generator handle_get_request(
         logger->log(LogLevel::DEBUG, "GET request, preparing full response.");
         http::response<http::file_body> res{
             std::piecewise_construct,
-                std::make_tuple(std::move(body)),
-                std::make_tuple(http::status::ok, req.version())
+            std::make_tuple(std::move(body)),
+            std::make_tuple(http::status::ok, req.version())
         };
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, mime_type(path));
@@ -160,6 +179,7 @@ http::message_generator handle_get_request(
         return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
     }
 }
+
 
 /**
  * @brief Handle an HTTP request and generate an appropriate response.
@@ -185,7 +205,7 @@ http::message_generator handle_request(
         return handle_post_request(std::move(req), app);
     } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
         logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
-        return handle_get_request(doc_root, std::move(req));
+        return handle_get_request(doc_root, std::move(req), app);
     } else {
         logger->log(LogLevel::DEBUG, "Unknown HTTP method, responding with bad request.");
         return send_(req, http::status::bad_request, "Unknown HTTP-method");

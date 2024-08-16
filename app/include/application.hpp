@@ -1,65 +1,110 @@
 #ifndef APPLICATION_HPP
 #define APPLICATION_HPP
 
+#include <queue>
+#include <unordered_map>
+#include <atomic>
+#include <mutex>
+#include <queue>
+#include <string>
+#include <condition_variable>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <string>
+
 #include "../../net/include/ollama.hpp"
 #include "../../log/include/log.hpp"
 
 /**
+ * @brief A structure representing a query to the LLM.
+ * 
+ * This structure holds all the information related to a single query, 
+ * including the prompt, responses, and its state (e.g., running, completed, canceled).
+ */
+struct Query {
+    std::string id;  ///< Unique identifier for the query.
+    std::string prompt;  ///< The prompt to be sent to the LLM.
+    std::string response;  ///< The full response from the LLM.
+    std::vector<std::string> partial_responses;  ///< Accumulated partial responses from the LLM.
+    std::atomic<bool> completed{false};  ///< Indicates whether the query has been completed.
+    std::atomic<bool> running{false};  ///< Indicates whether the query is currently running.
+    std::atomic<bool> canceled{false};  ///< Indicates whether the query has been canceled.
+};
+
+/**
  * @brief The Application class encapsulates the main logic of the application.
  * 
- * This class is responsible for managing the interaction with the LLM (Large Language Model) 
- * through the Ollama API. It handles making HTTP POST requests to the LLM server with specific 
- * prompts and retrieving the responses.
+ * This class is responsible for managing interactions with the Large Language Model (LLM) 
+ * through the Ollama API. It handles submitting prompts, receiving responses, and managing 
+ * the state of each query. It also provides methods to check the status of ongoing queries 
+ * and to cancel them if necessary.
  */
 class Application {
 public:
     /**
      * @brief Constructs an Application object.
      * 
-     * Initializes the Ollama object, which is used to interact with the LLM, 
-     * and sets up the required I/O context and timer for potential future tasks.
-     * 
-     * @param ioc A reference to the boost::asio::io_context, which is required for asynchronous operations.
+     * @param ioc The Boost.Asio I/O context that the application will use for asynchronous operations.
      */
     Application(boost::asio::io_context& ioc);
 
     /**
-     * @brief Performs an LLM query using the Ollama API with the given prompt.
+     * @brief Adds a new query to the application.
      * 
-     * This function sends a request to the LLM server using the Ollama API and retrieves the response.
+     * Generates a unique query ID, stores the prompt, and places the query in the queue for processing.
      * 
-     * @param prompt The prompt to send to the LLM.
-     * @return The response from the LLM as a string.
+     * @param prompt The prompt to be sent to the LLM.
+     * @return The unique ID of the newly added query.
      */
-    std::string query_llm(const std::string& prompt);
+    std::string add_query(const std::string& prompt);
 
     /**
-     * @brief Provides access to the Ollama instance.
+     * @brief Retrieves the status of a specific query.
      * 
-     * This function returns a reference to the Ollama object, allowing other parts 
-     * of the application to directly interact with the LLM through this instance.
+     * The status includes whether the query is running, completed, canceled, and any partial responses received so far.
      * 
-     * @return A reference to the Ollama object.
+     * @param query_id The unique ID of the query.
+     * @return A JSON string containing the status of the query.
      */
-    Ollama& get_ollama();
+    std::string get_query_status(const std::string& query_id);
 
+    /**
+     * @brief Cancels a specific query.
+     * 
+     * If the query is currently in progress, it will be marked as canceled and will stop processing.
+     * 
+     * @param query_id The unique ID of the query to cancel.
+     */
+    void cancel_query(const std::string& query_id);
+
+    // Existing methods, if any, should be documented similarly.
+    
 private:
-    /**
-     * @brief (Placeholder) Starts a recurring timer for executing tasks periodically.
-     * 
-     * This function is intended to set up a timer that triggers certain tasks (e.g., 
-     * querying the LLM) at regular intervals. It uses Boost.Asio's asynchronous timer 
-     * mechanism to achieve this.
-     */
-    void start_timer();
+    boost::asio::io_context& io_context_;  ///< Reference to the I/O context used for async operations.
+    Ollama ollama_;  ///< Instance of Ollama API handler.
+    boost::asio::steady_timer timer_;  ///< Timer used for scheduling tasks or timeouts.
 
-    Ollama ollama_;  ///< The Ollama object responsible for interacting with the LLM.
-    boost::asio::io_context& io_context_;  ///< Reference to the I/O context for asynchronous operations.
-    boost::asio::steady_timer timer_;  ///< Timer for scheduling periodic tasks.
-    std::shared_ptr<Logger> logger_;  ///< Logger instance for logging application events.
+    std::queue<std::shared_ptr<Query>> query_queue_;  ///< Queue holding queries to be processed.
+    std::unordered_map<std::string, std::shared_ptr<Query>> query_map_;  ///< Map from query IDs to their associated Query objects.
+    std::mutex queue_mutex_;  ///< Mutex to protect access to the query queue and map.
+    std::condition_variable queue_cv_;  ///< Condition variable to signal when new queries are added to the queue.
+
+    /**
+     * @brief Continuously processes queries from the queue.
+     * 
+     * This function runs in a separate thread, popping queries from the queue and processing them.
+     * If a query is canceled, it will be skipped.
+     */
+    void process_queries();
+
+    /**
+     * @brief Processes a single query by sending it to the LLM and handling partial responses.
+     * 
+     * This function sends the prompt to the LLM, handles partial responses, and marks the query as 
+     * completed when all responses have been received or if an error occurs.
+     * 
+     * @param query The query to be processed.
+     */
+    void run_query(const std::shared_ptr<Query>& query);
 };
 
 #endif // APPLICATION_HPP
