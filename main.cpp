@@ -29,27 +29,6 @@ int main(int argc, char* argv[])
     auto const port = static_cast<unsigned short>(std::atoi(argv[2]));
     auto const doc_root = std::make_shared<std::string>(argv[3]);
     auto const threads = std::max<int>(1, std::atoi(argv[4]));
-    
-    /*
-     * OLLAMA EXPERIMENTATION
-     * The for loop currently displays the available models.
-     * Generating responses does not work
-     */
-    try { 
-        std::vector<std::string> models = ollama::list_models();
-        for(int i = 0; i < models.size(); i++) {
-            std::cout << models.at(i) << std::endl;
-        }
-
-        // Attempt to generate a response from the model
-        //std::string response = ollama::generate("llava:latest", "Why is the sky blue?");
-        //std::cout << "Generated response: " << response << std::endl;
-    } 
-    catch(ollama::exception& e) {
-        std::cout << "Error: " << e.what() << std::endl;
-    }
-
-    // END OF OLLAMA EXPERIMENTATION BLOCK
 
     // Initialize the io_context
     logger->log(LogLevel::DEBUG, "Initializing io_context.");
