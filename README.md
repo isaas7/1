@@ -6,9 +6,7 @@
     - [x] query in application
     - [x] http(post) app->query
     - [x] use partial responses
-    -  
-- Queue
-    - add llm queries to queue
+    - [x] add llm queries to queue
 
 ## Project Description
 
@@ -16,11 +14,20 @@
 
 The application is organized into distinct modules that handle various aspects of the networking stack, from managing SSL certificates to handling HTTP requests and WebSocket sessions. **beastapp's** modular architecture makes it easy to extend and customize, whether you're building a web server, an API service, or a real-time communication platform.
 
+### Demo with partial responses
+
+```
+{
+    "query_id": "9420340123726940416",
+        "status": "{\"canceled\":false,\"completed\":false,\"partial_responses\":[\" The\",\" color\",\" of\",\" the\",\" sky\",\" is\",\" due\",\" to\",\" a\",\" process\",\" called\",\" scattering\",\".\",\" When\",\" sunlight\",\" passes\",\" through\",\" the\",\" Earth\",\"'\",\"s\",\" atmosphere\"],\"query_id\":\"9420340123726940416\",\"running\":true}"
+}
+```
+
 ### Ollama ML/LLM Integration
 
 A key feature of beastapp is its integration with Ollama's machine learning language model (LLM) capabilities. This allows the application to perform advanced natural language processing (NLP) tasks directly within the server environment. The integration is designed to be seamless, enabling beastapp to send prompts to the LLM and receive sophisticated responses, such as explanations, insights, or other text-based information, making it ideal for AI-driven applications.
 
-The LLM queries are efficiently handled using the **Ollama.hpp* class, which abstracts the complexities of interacting with the language model, allowing for straightforward integration with the rest of the application. This feature is especially useful for building AI-powered chatbots, customer support systems, or any other service requiring natural language understanding and generation.
+The LLM queries are efficiently handled using the **ollama-hpp**, which abstracts the complexities of interacting with the language model, allowing for straightforward integration with the rest of the application. This feature is especially useful for building AI-powered chatbots, customer support systems, or any other service requiring natural language understanding and generation.
 
 ## Getting Started
 
@@ -48,58 +55,6 @@ To run the application, use the following command:
 ```bash
 make run
 ```
-
-#### Interacting with Ollama via HTTP
-
-```
-POST / HTTP/1.1
-Content-Type: application/json
-User-Agent: PostmanRuntime/7.40.0
-Accept: */*
-Postman-Token: 
-Host: 
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Content-Length: 27
- 
-{
-"message": "hi"
-}
- 
-HTTP/1.1 200 OK
-Server: nginx/1.18.0 (Ubuntu)
-Date: Fri, 16 Aug 2024 11:03:05 GMT
-Content-Type: application/json
-Content-Length: 49
-Connection: keep-alive
- 
-{"response":" Hello! How can I help you today? "}
-
-POST / HTTP/1.1
-Content-Type: application/json
-User-Agent: PostmanRuntime/7.40.0
-Accept: */*
-Postman-Token: 
-Host:
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Content-Length: 28
- 
-{
-"message": "bye"
-}
- 
-HTTP/1.1 200 OK
-Server: nginx/1.18.0 (Ubuntu)
-Date: Fri, 16 Aug 2024 11:15:50 GMT
-Content-Type: application/json
-Content-Length: 134
-Connection: keep-alive
- 
-{"response":" Bye, have a great day! If you have any more questions or if there's anything else I can do for you, feel free to ask. "}
-```
-
-
 
 ## Directory Structure
 
@@ -138,10 +93,13 @@ llama3.1:latest
 
 ## Contributing
 
+Contributions to beastapp are welcome! If you have suggestions for improvements or would like to contribute new features, please feel free to submit a pull request or open an issue.
 
 ## License
 
 
 ## Acknowledgments
+
+Special thanks to the Boost community for providing a powerful and flexible set of libraries that make C++ development more accessible and efficient. Also, thanks to the Ollama team/community for their excellent machine learning models that power the LLM integration in this project.
 
 
