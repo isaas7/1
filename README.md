@@ -2,7 +2,9 @@
 
 ## Demo
 
+<summary>
 ![Alt text](img/demo.gif)
+</summary>
 
 ### 16 August 2024 Todo
 
