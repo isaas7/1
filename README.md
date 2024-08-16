@@ -2,9 +2,10 @@
 
 ## Demo
 
-<summary>
+<details>
+<summary>Click to view the image</summary>
 ![Alt text](img/demo.gif)
-</summary>
+</details>
 
 ### 16 August 2024 Todo
 
