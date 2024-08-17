@@ -43,8 +43,9 @@ http::response<http::string_body> send_(
     return res;
 }
 
+
 /**
- * @brief Handle an HTTP GET request to serve mock JSON data.
+ * @brief Handle an HTTP GET request to serve JSON data from a file.
  * 
  * @param req The GET request object.
  * @param app A shared pointer to the Application.
@@ -56,39 +57,23 @@ http::message_generator handle_json_data_request(
     std::shared_ptr<Application> app)
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
-    logger->log(LogLevel::DEBUG, "Received GET request for mock JSON data.");
+    logger->log(LogLevel::DEBUG, "Received GET request for JSON data.");
 
     try {
-        // Mock JSON data
-        nlohmann::json json_data = {
-            {"users", {
-                {"id", 1},
-                {"name", "Alice"},
-                {"email", "alice@example.com"},
-                {"preferences", {
-                    {"color", "blue"},
-                    {"food", "pizza"}
-                }}
-            }},
-            {"users", {
-                {"id", 2},
-                {"name", "Bob"},
-                {"email", "bob@example.com"},
-                {"preferences", {
-                    {"color", "green"},
-                    {"food", "pasta"}
-                }}
-            }},
-            {"users", {
-                {"id", 3},
-                {"name", "Charlie"},
-                {"email", "charlie@example.com"},
-                {"preferences", {
-                    {"color", "red"},
-                    {"food", "sushi"}
-                }}
-            }}
-        };
+        // Define the path to the JSON file
+        const std::string json_file_path = "www/data/mock.json";
+
+        // Open the JSON file
+        std::ifstream json_file(json_file_path);
+        if (!json_file.is_open()) {
+            logger->log(LogLevel::ERROR, "Failed to open JSON file: " + json_file_path);
+            return send_(req, http::status::internal_server_error, R"({"error": "Failed to open JSON file."})");
+        }
+
+        // Parse the JSON file
+        nlohmann::json json_data;
+        json_file >> json_data;
+        json_file.close();  // Close the file
 
         // Convert JSON to string
         std::string response_body = json_data.dump();
@@ -96,7 +81,7 @@ http::message_generator handle_json_data_request(
         // Send the JSON data as the response
         return send_(req, http::status::ok, response_body, "application/json");
     } catch (const std::exception& e) {
-        logger->log(LogLevel::ERROR, "Exception caught while serving mock JSON data: " + std::string(e.what()));
+        logger->log(LogLevel::ERROR, "Exception caught while serving JSON data: " + std::string(e.what()));
         return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
     }
 }

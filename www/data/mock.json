@@ -1,0 +1,41 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "name": "Alice",
+            "email": "alice@example.com",
+            "preferences": {
+                "color": "blue",
+                "food": "pizza"
+            }
+        },
+        {
+            "id": 2,
+            "name": "Bob",
+            "email": "bob@example.com",
+            "preferences": {
+                "color": "green",
+                "food": "pasta"
+            }
+        },
+        {
+            "id": 3,
+            "name": "Charlie",
+            "email": "charlie@example.com",
+            "preferences": {
+                "color": "red",
+                "food": "sushi"
+            }
+        },
+        {
+            "id": 4,
+            "name": "Diana",
+            "email": "diana@example.com",
+            "preferences": {
+                "color": "purple",
+                "food": "steak"
+            }
+        }
+    ]
+}
+
