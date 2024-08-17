@@ -43,6 +43,64 @@ http::response<http::string_body> send_(
     return res;
 }
 
+/**
+ * @brief Handle an HTTP GET request to serve mock JSON data.
+ * 
+ * @param req The GET request object.
+ * @param app A shared pointer to the Application.
+ * @return The HTTP response as a message generator.
+ */
+template <class Body, class Allocator>
+http::message_generator handle_json_data_request(
+    http::request<Body, http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)
+{
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    logger->log(LogLevel::DEBUG, "Received GET request for mock JSON data.");
+
+    try {
+        // Mock JSON data
+        nlohmann::json json_data = {
+            {"users", {
+                {"id", 1},
+                {"name", "Alice"},
+                {"email", "alice@example.com"},
+                {"preferences", {
+                    {"color", "blue"},
+                    {"food", "pizza"}
+                }}
+            }},
+            {"users", {
+                {"id", 2},
+                {"name", "Bob"},
+                {"email", "bob@example.com"},
+                {"preferences", {
+                    {"color", "green"},
+                    {"food", "pasta"}
+                }}
+            }},
+            {"users", {
+                {"id", 3},
+                {"name", "Charlie"},
+                {"email", "charlie@example.com"},
+                {"preferences", {
+                    {"color", "red"},
+                    {"food", "sushi"}
+                }}
+            }}
+        };
+
+        // Convert JSON to string
+        std::string response_body = json_data.dump();
+
+        // Send the JSON data as the response
+        return send_(req, http::status::ok, response_body, "application/json");
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Exception caught while serving mock JSON data: " + std::string(e.what()));
+        return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
+    }
+}
+
 
 /**
  * @brief Handle an HTTP POST request.
@@ -62,12 +120,28 @@ http::message_generator handle_post_request(
     try {
         auto json_obj = nlohmann::json::parse(req.body());
 
-        if (json_obj.contains("message")) {
-            std::string prompt = json_obj["message"].template get<std::string>();
-            logger->log(LogLevel::DEBUG, "Received LLM prompt: " + prompt);
+        if (json_obj.contains("command")) {
+            std::string command = json_obj["command"].template get<std::string>();
+            logger->log(LogLevel::DEBUG, "Received command: " + command);
+
+            if (command == "fetch_update") {
+                // Execute the fetch and update JSON data method
+                app->fetch_and_update_json_data();
+
+                nlohmann::json response_json;
+                response_json["status"] = "Fetch and update initiated";
+
+                return send_(req, http::status::ok, response_json.dump(), "application/json");
+            } else {
+                logger->log(LogLevel::ERROR, R"({"error": "Unknown command."})");
+                return send_(req, http::status::bad_request, R"({"error": "Unknown command."})");
+            }
+        } else if (json_obj.contains("message")) {
+            std::string message = json_obj["message"].template get<std::string>();
+            logger->log(LogLevel::DEBUG, "Received LLM message: " + message);
 
             // Add the query to the queue and get the query ID
-            std::string query_id = app->add_query(prompt);
+            std::string query_id = app->add_query(message);
 
             nlohmann::json response_json;
             response_json["query_id"] = query_id;
@@ -75,8 +149,8 @@ http::message_generator handle_post_request(
 
             return send_(req, http::status::ok, response_json.dump(), "application/json");
         } else {
-            logger->log(LogLevel::ERROR, R"({"error": "Missing 'message' field in JSON request."})");
-            return send_(req, http::status::bad_request, R"({"error": "Missing 'message' field in JSON request."})");
+            logger->log(LogLevel::ERROR, R"({"error": "Missing 'command' or 'message' field in JSON request."})");
+            return send_(req, http::status::bad_request, R"({"error": "Missing 'command' or 'message' field in JSON request."})");
         }
     } catch (const nlohmann::json::exception& e) {
         logger->log(LogLevel::ERROR, "JSON parsing exception: " + std::string(e.what()));
@@ -199,10 +273,13 @@ http::message_generator handle_request(
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
-    
+
     if (req.method() == http::verb::post && req.target() == "/") {
         logger->log(LogLevel::DEBUG, "Delegating to handle_post_request.");
         return handle_post_request(std::move(req), app);
+    } else if (req.method() == http::verb::get && req.target() == "/json_data") {
+        logger->log(LogLevel::DEBUG, "Delegating to handle_json_data_request.");
+        return handle_json_data_request(std::move(req), app);
     } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
         logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
         return handle_get_request(doc_root, std::move(req), app);
@@ -211,6 +288,7 @@ http::message_generator handle_request(
         return send_(req, http::status::bad_request, "Unknown HTTP-method");
     }
 }
+
 
 /**
  * @brief Determine the MIME type based on the file extension.

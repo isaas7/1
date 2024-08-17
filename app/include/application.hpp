@@ -12,6 +12,7 @@
 #include <boost/asio/ssl.hpp>
 
 #include "ollama.hpp"
+#include "../../net/include/client.hpp"
 #include "../../log/include/log.hpp"
 
 /**
@@ -45,7 +46,7 @@ public:
      * 
      * @param ioc The Boost.Asio I/O context that the application will use for asynchronous operations.
      */
-    Application(boost::asio::io_context& ioc);
+    Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx);
 
     /**
      * @brief Adds a new query to the application.
@@ -76,13 +77,14 @@ public:
      */
     void cancel_query(const std::string& query_id);
 
+    void fetch_and_update_json_data(); 
     // Existing methods, if any, should be documented similarly.
-    
 private:
     boost::asio::io_context& io_context_;  ///< Reference to the I/O context used for async operations.
+    ssl::context& ssl_ctx_;
     Ollama ollama_;  ///< Instance of Ollama API handler.
     boost::asio::steady_timer timer_;  ///< Timer used for scheduling tasks or timeouts.
-
+    std::shared_ptr<Client> client_; ///< Client used for making http requests
     std::queue<std::shared_ptr<Query>> query_queue_;  ///< Queue holding queries to be processed.
     std::unordered_map<std::string, std::shared_ptr<Query>> query_map_;  ///< Map from query IDs to their associated Query objects.
     std::mutex queue_mutex_;  ///< Mutex to protect access to the query queue and map.

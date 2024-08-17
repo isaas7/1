@@ -7,8 +7,8 @@
  * 
  * @param ioc The Boost.Asio I/O context that the application will use for asynchronous operations.
  */
-Application::Application(boost::asio::io_context& ioc)
-    : io_context_(ioc), ollama_("http://localhost:11434"), timer_(io_context_)
+Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
+    : io_context_(ioc), ssl_ctx_(ssl_ctx), client_(std::make_shared<Client>(ioc, ssl_ctx)), ollama_("http://localhost:11434"), timer_(io_context_)
 {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     logger->log(LogLevel::DEBUG, "Initializing app.");
@@ -131,7 +131,7 @@ void Application::run_query(const std::shared_ptr<Query>& query) {
     // Lambda function to handle each partial response received from the LLM.
     auto on_receive_token = [query, logger](const ollama::response& response) {
         logger->log(LogLevel::DEBUG, "Inside on_receive_token callback.");
-        
+
         // Check if the response contains a partial response and handle it.
         if (response.as_json().contains("response")) {
             std::string partial_response = response.as_json()["response"];
@@ -162,5 +162,28 @@ void Application::run_query(const std::shared_ptr<Query>& query) {
     // Mark the query as completed after processing (even if not successful).
     query->completed = true;
     query->running = false;
+}
+
+void Application::fetch_and_update_json_data()
+{
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG);
+
+    try {
+        // Use the Client class to perform the GET request
+        std::string response_body = client_->get("localhost", "8080", "/json_data", 11);
+
+        if (!response_body.empty()) {
+            nlohmann::json json_data = nlohmann::json::parse(response_body);
+            std::string prompt = "Index this data: " + json_data.dump();
+
+            // Use the existing add_query method to submit the JSON data to the LLM for indexing
+            std::string query_id = this->add_query(prompt);
+            logger->log(LogLevel::DEBUG, "Submitted JSON data to LLM with query ID: " + query_id);
+        } else {
+            logger->log(LogLevel::ERROR, "Failed to fetch JSON data from server. Response was empty.");
+        }
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Exception caught while fetching and updating JSON data: " + std::string(e.what()));
+    }
 }
 

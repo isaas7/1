@@ -12,7 +12,7 @@
     - [x] http(post) app->query
     - [x] use partial responses
     - [x] add llm queries to queue
-
+    - [x] implement json endpoint for periodic update
 ## Project Description
 
 **beastapp** is a versatile and scalable C++ application built on top of the Boost.Beast library. It provides a robust framework for handling HTTP and WebSocket communications with a focus on security, using SSL/TLS for encrypted connections. Designed for high-performance networking, **beastapp** is ideal for building server-side applications that require secure and efficient client-server communication.

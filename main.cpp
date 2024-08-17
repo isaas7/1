@@ -4,6 +4,7 @@
 #include "net/include/server_certificate.hpp"
 #include "net/include/http_tools.hpp"
 #include "net/include/server.hpp"
+#include "net/include/client.hpp"
 #include "app/include/ollama.hpp"
 #include "app/include/application.hpp"
 #include <boost/asio.hpp>
@@ -38,9 +39,8 @@ int main(int argc, char* argv[])
     logger->log(LogLevel::DEBUG, "Initializing SSL context.");
     ssl::context ctx{ssl::context::tlsv12};
     load_server_certificate(ctx);
-
     // Initialize the Application
-    auto app = std::make_shared<Application>(ioc);
+    auto app = std::make_shared<Application>(ioc, ctx);
 
     // Create loggers for WebSocket listener and session
     auto websocket_listener_logger = LoggerManager::getLogger("WebSocketListenerLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
