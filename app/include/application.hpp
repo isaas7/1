@@ -11,7 +11,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
-#include "../../net/include/ollama.hpp"
+#include "ollama.hpp"
 #include "../../log/include/log.hpp"
 
 /**

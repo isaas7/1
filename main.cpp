@@ -1,11 +1,11 @@
-#include "net/include/ollama.hpp"
+#include "log/include/log.hpp" // Include the logger
+#include "net/include/websocket_listener.hpp"
 #include "net/include/utils.hpp"
 #include "net/include/server_certificate.hpp"
 #include "net/include/http_tools.hpp"
 #include "net/include/server.hpp"
+#include "app/include/ollama.hpp"
 #include "app/include/application.hpp"
-#include "log/include/log.hpp" // Include the logger
-#include "net/include/websocket_listener.hpp"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/asio/ssl.hpp>

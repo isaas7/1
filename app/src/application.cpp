@@ -1,6 +1,6 @@
 #include "../include/application.hpp"
 #include "../../log/include/log.hpp"
-#include "../../net/include/ollama.hpp"
+#include "../include/ollama.hpp"
 
 /**
  * @brief Constructs an Application object and starts the query processing thread.

@@ -1,7 +1,7 @@
 #include "../include/http_tools.hpp"
 #include "../include/utils.hpp"
 #include "../../log/include/log.hpp"
-#include "../include/ollama.hpp"
+#include "../../app/include/ollama.hpp"
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
