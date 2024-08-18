@@ -1,10 +1,9 @@
 #include "log/include/log.hpp" // Include the logger
-#include "net/include/websocket_listener.hpp"
-#include "net/include/utils.hpp"
-#include "net/include/server_certificate.hpp"
-#include "net/include/http_tools.hpp"
-#include "net/include/server.hpp"
-#include "net/include/client.hpp"
+#include "http/include/utils.hpp"
+#include "http/include/server_certificate.hpp"
+#include "http/include/http_tools.hpp"
+#include "http/include/server.hpp"
+#include "http/include/client.hpp"
 #include "app/include/application.hpp"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
@@ -40,22 +39,6 @@ int main(int argc, char* argv[])
     load_server_certificate(ctx);
     // Initialize the Application
     auto app = std::make_shared<Application>(ioc, ctx);
-
-    // Create loggers for WebSocket listener and session
-    auto websocket_listener_logger = LoggerManager::getLogger("WebSocketListenerLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
-    auto websocket_session_logger = LoggerManager::getLogger("WebSocketSessionLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
-    auto http_tools_logger = LoggerManager::getLogger("http_tools_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
-    // Start the WebSocket listener to accept incoming WebSocket connections
-    logger->log(LogLevel::DEBUG, "Starting the WebSocket listener.");
-    auto websocket_instance = std::make_shared<websocket_listener>(
-        ioc,
-        ctx,
-        tcp::endpoint{address, static_cast<unsigned short>(port + 1)},
-        websocket_listener_logger,
-        websocket_session_logger // Pass the session logger to the listener, which will pass it to sessions 
-    );
-    websocket_instance->run();
-
     // Start the server to accept incoming connections
     logger->log(LogLevel::DEBUG, "Starting the HTTP server.");
     auto server_instance = std::make_shared<server>(

@@ -12,8 +12,8 @@
 #include <boost/asio/ssl.hpp>
 #include <sqlite3.h>  // Include SQLite header
 
-#include "ollama.hpp"
-#include "../../net/include/client.hpp"
+#include "../../ollama/include/ollama.hpp"
+#include "../../http/include/client.hpp"
 #include "../../log/include/log.hpp"
 
 /**

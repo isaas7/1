@@ -1,42 +1,10 @@
 # beastapp
 
-## Demo
-
-![Alt text](img/demo.gif)
-
-### 18 August 2024
-- [x] SQLite 
-    - [x] modularized database initialization and table creation     
-- [] store calculate and visualize server statistics in the client
-- [x] Handle context
-
-### 17 August 2024
-
-- [x] implement json endpoint with mock data
-- [x] implement file io for mock data
-
-### 16 August 2024 Todo
-
-LLM querying
-- [x] query in application
-- [x] http(post) app->query
-- [x] use partial responses
-- [x] add llm queries to queue
-
 ## Project Description
 
 **beastapp** is a versatile and scalable C++ application built on top of the Boost.Beast library. It provides a robust framework for handling HTTP and WebSocket communications with a focus on security, using SSL/TLS for encrypted connections. Designed for high-performance networking, **beastapp** is ideal for building server-side applications that require secure and efficient client-server communication.
 
 The application is organized into distinct modules that handle various aspects of the networking stack, from managing SSL certificates to handling HTTP requests and WebSocket sessions. **beastapp's** modular architecture makes it easy to extend and customize, whether you're building a web server, an API service, or a real-time communication platform.
-
-### Demo with partial responses
-
-```
-{
-    "query_id": "9420340123726940416",
-        "status": "{\"canceled\":false,\"completed\":false,\"partial_responses\":[\" The\",\" color\",\" of\",\" the\",\" sky\",\" is\",\" due\",\" to\",\" a\",\" process\",\" called\",\" scattering\",\".\",\" When\",\" sunlight\",\" passes\",\" through\",\" the\",\" Earth\",\"'\",\"s\",\" atmosphere\"],\"query_id\":\"9420340123726940416\",\"running\":true}"
-}
-```
 
 ### Ollama ML/LLM Integration
 
@@ -71,32 +39,25 @@ To run the application, use the following command:
 make run
 ```
 
-## Directory Structure
-
-The project is organized into the following main directories:
-
-### app/
-
-This directory contains the core application logic. It includes the `Application` class, which manages the high-level operations of the application, such as sending HTTP requests and interacting with the network layer.
-
-### net/
-
-The `net` directory houses all networking-related components. This includes the HTTP client (`Client` class), server setup (`server` class), session management, SSL/TLS certificates, and any utilities related to network operations. The client is used for making HTTP requests, while the server handles incoming connections and requests.
-
-### log/
-
-The `log` directory is responsible for logging functionality. It contains the logger implementation, which is used across the application to record events, errors, and debug information. The logger is configurable and can output logs to both the console and files, depending on the setup.
-
-
 ## Contributing
 
 Contributions to beastapp are welcome! If you have suggestions for improvements or would like to contribute new features, please feel free to submit a pull request or open an issue.
 
 ## License
 
+MIT License
+
+Copyright (c) 2024 Diyor Sattarov (diyooor) 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Acknowledgments
 
 Special thanks to the Boost community for providing a powerful and flexible set of libraries that make C++ development more accessible and efficient. Also, thanks to the Ollama team/community for their excellent machine learning models that power the LLM integration in this project.
+
 
 
