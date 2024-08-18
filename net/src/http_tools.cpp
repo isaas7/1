@@ -1,7 +1,6 @@
 #include "../include/http_tools.hpp"
 #include "../include/utils.hpp"
 #include "../../log/include/log.hpp"
-#include "../../app/include/ollama.hpp"
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -108,28 +107,20 @@ http::message_generator handle_post_request(
     try {
         auto json_obj = nlohmann::json::parse(req.body());
 
-        if (json_obj.contains("command")) {
-            std::string command = json_obj["command"].template get<std::string>();
-            logger->log(LogLevel::DEBUG, "Received command: " + command);
-
-            if (command == "fetch_update") {
-                // Execute the fetch and update JSON data method
-                app->fetch_and_update_json_data();
-
-                nlohmann::json response_json;
-                response_json["status"] = "Fetch and update initiated";
-
-                return send_(req, http::status::ok, response_json.dump(), "application/json");
-            } else {
-                logger->log(LogLevel::ERROR, R"({"error": "Unknown command."})");
-                return send_(req, http::status::bad_request, R"({"error": "Unknown command."})");
-            }
-        } else if (json_obj.contains("message")) {
+        // Check if the JSON contains both 'message' and 'context'
+        if (json_obj.contains("message")) {
             std::string message = json_obj["message"].template get<std::string>();
             logger->log(LogLevel::DEBUG, "Received LLM message: " + message);
 
-            // Add the query to the queue and get the query ID
-            std::string query_id = app->add_query(message);
+            // Handle context if provided
+            ollama::response context;
+            if (json_obj.contains("context")) {
+                context = ollama::response(json_obj["context"].dump());
+                logger->log(LogLevel::DEBUG, "Received context for LLM.");
+            }
+
+            // Add the query with context to the queue and get the query ID
+            std::string query_id = app->add_query(message, context);
 
             nlohmann::json response_json;
             response_json["query_id"] = query_id;
@@ -137,8 +128,8 @@ http::message_generator handle_post_request(
 
             return send_(req, http::status::ok, response_json.dump(), "application/json");
         } else {
-            logger->log(LogLevel::ERROR, R"({"error": "Missing 'command' or 'message' field in JSON request."})");
-            return send_(req, http::status::bad_request, R"({"error": "Missing 'command' or 'message' field in JSON request."})");
+            logger->log(LogLevel::ERROR, R"({"error": "Missing 'message' field in JSON request."})");
+            return send_(req, http::status::bad_request, R"({"error": "Missing 'message' field in JSON request."})");
         }
     } catch (const nlohmann::json::exception& e) {
         logger->log(LogLevel::ERROR, "JSON parsing exception: " + std::string(e.what()));
@@ -148,6 +139,7 @@ http::message_generator handle_post_request(
         return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
     }
 }
+
 
 
 /**

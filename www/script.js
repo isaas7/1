@@ -1,3 +1,5 @@
+let lastResponse = ""; // Variable to store the last response from the LLM
+
 document.getElementById('sendQueryButton').addEventListener('click', function() {
     const queryInput = document.getElementById('queryInput');
     const queryText = queryInput.value.trim();
@@ -13,9 +15,10 @@ document.getElementById('sendQueryButton').addEventListener('click', function() 
     // Clear the input box
     queryInput.value = '';
 
-    // Send the query
-    sendQuery(queryText);
+    // Send the query with the previous response as context
+    sendQuery(queryText, lastResponse);
 });
+
 
 function sendQuery(query) {
     fetch('/', {
@@ -23,7 +26,13 @@ function sendQuery(query) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: query })
+        body: JSON.stringify({
+            message: query,
+            context: {
+                response: lastResponse, // Include the last response as context
+                done: true
+            }
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -82,6 +91,9 @@ function fetchQueryUpdates(queryId) {
             if (completed) {
                 document.getElementById('queryStatus').innerText = "Query completed.";
                 clearInterval(interval);
+
+                // Store the last response in the global variable for use in the next query
+                lastResponse = currentResponseText.trim();
             }
 
         })
