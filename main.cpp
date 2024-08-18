@@ -5,7 +5,6 @@
 #include "net/include/http_tools.hpp"
 #include "net/include/server.hpp"
 #include "net/include/client.hpp"
-#include "app/include/ollama.hpp"
 #include "app/include/application.hpp"
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>

@@ -1,6 +1,5 @@
 #include "../include/application.hpp"
 #include "../../log/include/log.hpp"
-#include "../include/ollama.hpp"
 #include <sqlite3.h>
 #include <chrono>
 #include <iomanip>
@@ -94,24 +93,26 @@ void Application::check_and_create_tables() {
  * @param prompt The prompt to be sent to the LLM.
  * @return The unique ID of the newly added query.
  */
-std::string Application::add_query(const std::string& prompt) {
-    // Create a new Query object and generate a unique ID based on the prompt and current time.
+std::string Application::add_query(const std::string& prompt, const ollama::response& context) {
     auto query = std::make_shared<Query>();
     query->id = std::to_string(std::hash<std::string>{}(prompt + std::to_string(std::chrono::system_clock::now().time_since_epoch().count())));
     query->prompt = prompt;
-
-    {
-        // Lock the mutex to protect access to the queue and map.
-        std::lock_guard<std::mutex> lock(queue_mutex_);
-        query_queue_.push(query);  // Add the query to the queue.
-        query_map_[query->id] = query;  // Store the query in the map using its ID.
+    
+    if (context.is_valid()) {
+        query->last_context = context;
     }
 
-    // Notify the processing thread that a new query is available.
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        query_queue_.push(query);
+        query_map_[query->id] = query;
+    }
+
     queue_cv_.notify_one();
 
-    return query->id;  // Return the unique ID of the new query.
+    return query->id;
 }
+
 
 /**
  * @brief Retrieves the status of a specific query.
@@ -210,6 +211,9 @@ void Application::run_query(const std::shared_ptr<Query>& query) {
             logger->log(LogLevel::ERROR, "Invalid or error response: " + response.as_json_string());
         }
 
+        // Store the latest context for future queries
+        query->last_context = response;
+
         // Mark the query as completed when the "done" flag is true.
         if (response.as_json().contains("done") && response.as_json()["done"].get<bool>()) {
             logger->log(LogLevel::DEBUG, "Final response received. Marking query as completed.");
@@ -225,13 +229,21 @@ void Application::run_query(const std::shared_ptr<Query>& query) {
         }
     };
 
-    // Send the prompt to the LLM and handle the response streaming.
-    ollama_.generate("llava:latest", query->prompt, on_receive_token);
+    // Send the prompt to the LLM with or without context
+    if (query->last_context.is_valid()) {
+        // Subsequent query with context
+        ollama_.generate("llava:latest", query->prompt, query->last_context, on_receive_token);
+    } else {
+        // Initial query without context
+        ollama_.generate("llava:latest", query->prompt, on_receive_token);
+    }
 
     // Mark the query as completed after processing (even if not successful).
     query->completed = true;
     query->running = false;
 }
+
+
 
 void Application::fetch_and_update_json_data()
 {

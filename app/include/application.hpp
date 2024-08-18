@@ -30,6 +30,7 @@ struct Query {
     std::atomic<bool> completed{false};  ///< Indicates whether the query has been completed.
     std::atomic<bool> running{false};  ///< Indicates whether the query is currently running.
     std::atomic<bool> canceled{false};  ///< Indicates whether the query has been canceled.
+    ollama::response last_context;
 };
 
 /**
@@ -62,7 +63,7 @@ public:
      * @param prompt The prompt to be sent to the LLM.
      * @return The unique ID of the newly added query.
      */
-    std::string add_query(const std::string& prompt);
+    std::string add_query(const std::string& prompt, const ollama::response& context = ollama::response());
 
     /**
      * @brief Retrieves the status of a specific query.
