@@ -1,6 +1,11 @@
 #include "../include/application.hpp"
 #include "../../log/include/log.hpp"
 #include "../include/ollama.hpp"
+#include <sqlite3.h>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+#include <filesystem>  // C++17 feature for file system operations
 
 /**
  * @brief Constructs an Application object and starts the query processing thread.
@@ -13,8 +18,37 @@ Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     logger->log(LogLevel::DEBUG, "Initializing app.");
 
+    // Get current date and create a filename
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%m_%d_%Y");
+    std::string db_filename = "database_" + ss.str() + ".db";
+
+    // Check if the database file for the current date already exists
+    if (std::filesystem::exists(db_filename)) {
+        logger->log(LogLevel::DEBUG, "Using existing database for today: " + db_filename);
+    } else {
+        logger->log(LogLevel::DEBUG, "Creating new database for today: " + db_filename);
+    }
+
+    // Open the database connection
+    if (sqlite3_open(db_filename.c_str(), &db_) != SQLITE_OK) {
+        logger->log(LogLevel::ERROR, "Cannot open database: " + std::string(sqlite3_errmsg(db_)));
+        throw std::runtime_error("Failed to open database");
+    }
+
     // Start a thread to process the query queue
     std::thread(&Application::process_queries, this).detach();
+}
+
+/**
+ * @brief Destructor to close the database connection.
+ */
+Application::~Application() {
+    if (db_) {
+        sqlite3_close(db_);
+    }
 }
 
 /**

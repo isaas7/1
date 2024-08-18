@@ -4,11 +4,16 @@
 
 ![Alt text](img/demo.gif)
 
+### 18 August 2024
+    - [x] SQLite 
+    - [] store calculate and visualize server statistics in the client
+    - [] Implement creating prompts with mock data
 
 ### 17 August 2024
 
     - [x] implement json endpoint with mock data
     - [x] implement file io for mock data
+
 ### 16 August 2024 Todo
 
 - LLM querying
@@ -16,6 +21,7 @@
     - [x] http(post) app->query
     - [x] use partial responses
     - [x] add llm queries to queue
+
 ## Project Description
 
 **beastapp** is a versatile and scalable C++ application built on top of the Boost.Beast library. It provides a robust framework for handling HTTP and WebSocket communications with a focus on security, using SSL/TLS for encrypted connections. Designed for high-performance networking, **beastapp** is ideal for building server-side applications that require secure and efficient client-server communication.

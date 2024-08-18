@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <sqlite3.h>  // Include SQLite header
 
 #include "ollama.hpp"
 #include "../../net/include/client.hpp"
@@ -49,6 +50,11 @@ public:
     Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx);
 
     /**
+     * @brief Destructor for Application class to close SQLite connection.
+     */
+    ~Application();
+
+    /**
      * @brief Adds a new query to the application.
      * 
      * Generates a unique query ID, stores the prompt, and places the query in the queue for processing.
@@ -79,6 +85,7 @@ public:
 
     void fetch_and_update_json_data(); 
     // Existing methods, if any, should be documented similarly.
+
 private:
     boost::asio::io_context& io_context_;  ///< Reference to the I/O context used for async operations.
     ssl::context& ssl_ctx_;
@@ -89,6 +96,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Query>> query_map_;  ///< Map from query IDs to their associated Query objects.
     std::mutex queue_mutex_;  ///< Mutex to protect access to the query queue and map.
     std::condition_variable queue_cv_;  ///< Condition variable to signal when new queries are added to the queue.
+
+    sqlite3* db_;  ///< SQLite database connection pointer
 
     /**
      * @brief Continuously processes queries from the queue.
