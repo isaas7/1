@@ -100,6 +100,20 @@ private:
     sqlite3* db_;  ///< SQLite database connection pointer
 
     /**
+     * @brief Initializes the SQLite database connection.
+     * 
+     * Opens the SQLite database for the current date. If the database file does not exist, it is created.
+     */
+    void initialize_database();
+
+    /**
+     * @brief Checks if a table exists in the database and creates it if it doesn't.
+     * 
+     * Checks if the "example_table" exists in the SQLite database and creates it if it doesn't.
+     */
+    void check_and_create_tables();
+
+    /**
      * @brief Continuously processes queries from the queue.
      * 
      * This function runs in a separate thread, popping queries from the queue and processing them.

@@ -5,22 +5,23 @@
 ![Alt text](img/demo.gif)
 
 ### 18 August 2024
-    - [x] SQLite 
-    - [] store calculate and visualize server statistics in the client
-    - [] Implement creating prompts with mock data
+- [x] SQLite 
+    - [x] modularized database initialization and table creation     
+- [] store calculate and visualize server statistics in the client
+- [] Implement creating prompts with mock data
 
 ### 17 August 2024
 
-    - [x] implement json endpoint with mock data
-    - [x] implement file io for mock data
+- [x] implement json endpoint with mock data
+- [x] implement file io for mock data
 
 ### 16 August 2024 Todo
 
-- LLM querying
-    - [x] query in application
-    - [x] http(post) app->query
-    - [x] use partial responses
-    - [x] add llm queries to queue
+LLM querying
+- [x] query in application
+- [x] http(post) app->query
+- [x] use partial responses
+- [x] add llm queries to queue
 
 ## Project Description
 

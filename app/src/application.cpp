@@ -18,6 +18,30 @@ Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     logger->log(LogLevel::DEBUG, "Initializing app.");
 
+    initialize_database();  // Initialize the database connection
+    check_and_create_tables();  // Check and create necessary tables
+
+    // Start a thread to process the query queue
+    std::thread(&Application::process_queries, this).detach();
+}
+
+/**
+ * @brief Destructor to close the database connection.
+ */
+Application::~Application() {
+    if (db_) {
+        sqlite3_close(db_);
+    }
+}
+
+/**
+ * @brief Initializes the SQLite database connection.
+ * 
+ * Opens the SQLite database for the current date. If the database file does not exist, it is created.
+ */
+void Application::initialize_database() {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+
     // Get current date and create a filename
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -37,17 +61,28 @@ Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
         logger->log(LogLevel::ERROR, "Cannot open database: " + std::string(sqlite3_errmsg(db_)));
         throw std::runtime_error("Failed to open database");
     }
-
-    // Start a thread to process the query queue
-    std::thread(&Application::process_queries, this).detach();
 }
 
 /**
- * @brief Destructor to close the database connection.
+ * @brief Checks if a table exists in the database and creates it if it doesn't.
+ * 
+ * Checks if the "example_table" exists in the SQLite database and creates it if it doesn't.
  */
-Application::~Application() {
-    if (db_) {
-        sqlite3_close(db_);
+void Application::check_and_create_tables() {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+
+    // SQL command to create the example_table if it doesn't exist
+    const char* check_table_sql = "CREATE TABLE IF NOT EXISTS example_table ("
+                                  "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                  "data TEXT NOT NULL);";
+    
+    char* errmsg = nullptr;
+    if (sqlite3_exec(db_, check_table_sql, 0, 0, &errmsg) != SQLITE_OK) {
+        logger->log(LogLevel::ERROR, "Failed to create/check example_table: " + std::string(errmsg));
+        sqlite3_free(errmsg);
+        throw std::runtime_error("Failed to create/check example_table");
+    } else {
+        logger->log(LogLevel::DEBUG, "Checked/created example_table successfully.");
     }
 }
 
