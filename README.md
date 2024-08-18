@@ -8,7 +8,7 @@
 - [x] SQLite 
     - [x] modularized database initialization and table creation     
 - [] store calculate and visualize server statistics in the client
-- [] Handle context
+- [x] Handle context
 
 ### 17 August 2024
 
