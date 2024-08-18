@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     // Create loggers for WebSocket listener and session
     auto websocket_listener_logger = LoggerManager::getLogger("WebSocketListenerLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
     auto websocket_session_logger = LoggerManager::getLogger("WebSocketSessionLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
-
+    auto http_tools_logger = LoggerManager::getLogger("http_tools_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     // Start the WebSocket listener to accept incoming WebSocket connections
     logger->log(LogLevel::DEBUG, "Starting the WebSocket listener.");
     auto websocket_instance = std::make_shared<websocket_listener>(

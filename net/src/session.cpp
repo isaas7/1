@@ -90,15 +90,18 @@ void session::do_read()
     auto logger = LoggerManager::getLogger("session_logger");
     logger->log(LogLevel::DEBUG, "Reading request.");
 
+    auto read_start_time = std::chrono::steady_clock::now();
+
     req_ = {};
 
     beast::get_lowest_layer(stream_).expires_after(std::chrono::seconds(30));
 
     http::async_read(stream_, buffer_, req_,
-            beast::bind_front_handler(
-                &session::on_read,
-                shared_from_this()));
+            [self = shared_from_this(), read_start_time](boost::beast::error_code ec, std::size_t bytes_transferred) {
+                self->on_read(ec, bytes_transferred, read_start_time);
+            });
 }
+
 
 /**
  * @brief Handles the completion of the asynchronous read operation.
@@ -108,10 +111,14 @@ void session::do_read()
  * @param ec The error code, if any, from the read operation.
  * @param bytes_transferred The number of bytes transferred during the read.
  */
-void session::on_read(boost::beast::error_code ec, std::size_t bytes_transferred)
+void session::on_read(boost::beast::error_code ec, std::size_t bytes_transferred, std::chrono::steady_clock::time_point read_start_time)
 {
     boost::ignore_unused(bytes_transferred);
     auto logger = LoggerManager::getLogger("session_logger");
+
+    auto read_end_time = std::chrono::steady_clock::now();
+    auto read_duration = std::chrono::duration_cast<std::chrono::microseconds>(read_end_time - read_start_time).count();
+    logger->log(LogLevel::DEBUG, "Time to read request: " + std::to_string(read_duration) + " ms");
 
     if(ec == http::error::end_of_stream) {
         logger->log(LogLevel::DEBUG, "End of stream detected, closing session.");

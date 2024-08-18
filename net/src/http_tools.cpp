@@ -10,7 +10,7 @@
 #include <boost/beast/version.hpp>
 #include <string>
 
-LogLevel http_log_level = LogLevel::INFO;
+LogLevel http_log_level = LogLevel::DEBUG;
 
 /**
  * @brief Send an HTTP response with the given status and body.
@@ -23,7 +23,7 @@ LogLevel http_log_level = LogLevel::INFO;
  * @return The HTTP response object.
  */
 template <class Body, class Allocator>
-http::response<http::string_body> send_(
+http::message_generator send_(
     http::request<Body, http::basic_fields<Allocator>> const& req,
     http::status status,
     const std::string& body,
@@ -40,8 +40,11 @@ http::response<http::string_body> send_(
     res.prepare_payload();
 
     logger->log(LogLevel::DEBUG, "Response prepared with body: " + body);
-    return res;
+
+    // Return the response as a message generator
+    return http::message_generator(std::move(res));
 }
+
 
 
 /**
@@ -259,20 +262,34 @@ http::message_generator handle_request(
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
 
-    if (req.method() == http::verb::post && req.target() == "/") {
-        logger->log(LogLevel::DEBUG, "Delegating to handle_post_request.");
-        return handle_post_request(std::move(req), app);
-    } else if (req.method() == http::verb::get && req.target() == "/json_data") {
-        logger->log(LogLevel::DEBUG, "Delegating to handle_json_data_request.");
-        return handle_json_data_request(std::move(req), app);
-    } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
-        logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
-        return handle_get_request(doc_root, std::move(req), app);
-    } else {
-        logger->log(LogLevel::DEBUG, "Unknown HTTP method, responding with bad request.");
-        return send_(req, http::status::bad_request, "Unknown HTTP-method");
-    }
+    // Use high_resolution_clock for finer precision
+    auto process_start_time = std::chrono::high_resolution_clock::now();
+
+    // Initialize the response variable directly with the appropriate handler
+    http::message_generator response = [&] {
+        if (req.method() == http::verb::post && req.target() == "/") {
+            logger->log(LogLevel::DEBUG, "Delegating to handle_post_request.");
+            return handle_post_request(std::move(req), app);
+        } else if (req.method() == http::verb::get && req.target() == "/json_data") {
+            logger->log(LogLevel::DEBUG, "Delegating to handle_json_data_request.");
+            return handle_json_data_request(std::move(req), app);
+        } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
+            logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
+            return handle_get_request(doc_root, std::move(req), app);
+        } else {
+            logger->log(LogLevel::DEBUG, "Unknown HTTP method, responding with bad request.");
+            return send_(req, http::status::bad_request, "Unknown HTTP-method");
+        }
+    }();
+
+    auto process_end_time = std::chrono::high_resolution_clock::now();
+    auto process_duration = std::chrono::duration_cast<std::chrono::microseconds>(process_end_time - process_start_time).count();
+    logger->log(LogLevel::DEBUG, "Time to process request: " + std::to_string(process_duration) + " µs");
+    return response;
 }
+
+
+
 
 
 /**

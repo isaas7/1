@@ -24,8 +24,8 @@ server::server(
     , doc_root_(doc_root)
     , app_(app)
 {
-    auto logger = LoggerManager::getLogger("server_logger", LogLevel::INFO, LogOutput::CONSOLE);
-    logger->log(LogLevel::DEBUG, "Initializing server.");
+    logger_ = LoggerManager::getLogger("server_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    logger_->log(LogLevel::DEBUG, "Initializing server.");
 
     boost::beast::error_code ec;
 
@@ -33,41 +33,41 @@ server::server(
     acceptor_.open(endpoint.protocol(), ec);
     if (ec)
     {
-        logger->log(LogLevel::ERROR, "Error opening acceptor: " + ec.message());
+        logger_->log(LogLevel::ERROR, "Error opening acceptor: " + ec.message());
         return;
     }
 
-    logger->log(LogLevel::DEBUG, "Acceptor opened successfully.");
+    logger_->log(LogLevel::DEBUG, "Acceptor opened successfully.");
 
     // Allow the socket to be reused after the server is closed.
     acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
     if (ec)
     {
-        logger->log(LogLevel::ERROR, "Error setting socket option: " + ec.message());
+        logger_->log(LogLevel::ERROR, "Error setting socket option: " + ec.message());
         return;
     }
 
-    logger->log(LogLevel::DEBUG, "Socket option set for address reuse.");
+    logger_->log(LogLevel::DEBUG, "Socket option set for address reuse.");
 
     // Bind the acceptor to the specified endpoint.
     acceptor_.bind(endpoint, ec);
     if (ec)
     {
-        logger->log(LogLevel::ERROR, "Error binding acceptor: " + ec.message());
+        logger_->log(LogLevel::ERROR, "Error binding acceptor: " + ec.message());
         return;
     }
 
-    logger->log(LogLevel::DEBUG, "Acceptor bound to endpoint.");
+    logger_->log(LogLevel::DEBUG, "Acceptor bound to endpoint.");
 
     // Start listening for incoming connections.
     acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
     if (ec)
     {
-        logger->log(LogLevel::ERROR, "Error starting listener: " + ec.message());
+        logger_->log(LogLevel::ERROR, "Error starting listener: " + ec.message());
         return;
     }
 
-    logger->log(LogLevel::DEBUG, "Server listening for connections.");
+    logger_->log(LogLevel::DEBUG, "Server listening for connections.");
 }
 
 /**
@@ -77,8 +77,7 @@ server::server(
  */
 void server::run()
 {
-    auto logger = LoggerManager::getLogger("server_logger");
-    logger->log(LogLevel::DEBUG, "Running server.");
+    logger_->log(LogLevel::DEBUG, "Running server.");
     do_accept();
 }
 
@@ -90,8 +89,7 @@ void server::run()
  */
 void server::do_accept()
 {
-    auto logger = LoggerManager::getLogger("server_logger");
-    logger->log(LogLevel::DEBUG, "Waiting for connections...");
+    logger_->log(LogLevel::DEBUG, "Waiting for connections...");
 
     acceptor_.async_accept(
         boost::asio::make_strand(ioc_),
@@ -111,18 +109,23 @@ void server::do_accept()
  */
 void server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
 {
-    auto logger = LoggerManager::getLogger("server_logger");
+    auto accept_start_time = std::chrono::steady_clock::now();
 
     if (!ec)
     {
-        logger->log(LogLevel::DEBUG, "Connection accepted.");
+        logger_->log(LogLevel::DEBUG, "Connection accepted.");
         
         // Create a new session and start it
-        std::make_shared<session>(std::move(socket), ctx_, doc_root_, app_)->run();
+        auto new_session = std::make_shared<session>(std::move(socket), ctx_, doc_root_, app_);
+        new_session->run();
+
+        auto accept_end_time = std::chrono::steady_clock::now();
+        auto accept_duration = std::chrono::duration_cast<std::chrono::microseconds>(accept_end_time - accept_start_time).count();
+        logger_->log(LogLevel::DEBUG, "Time to accept connection: " + std::to_string(accept_duration) + " µs");
     }
     else
     {
-        logger->log(LogLevel::ERROR, "Error accepting connection: " + ec.message());
+        logger_->log(LogLevel::ERROR, "Error accepting connection: " + ec.message());
     }
 
     // Accept another connection

@@ -76,7 +76,7 @@ private:
      * @param ec The error code, if any, from the read operation.
      * @param bytes_transferred The number of bytes transferred during the read.
      */
-    void on_read(boost::beast::error_code ec, std::size_t bytes_transferred);
+    void on_read(boost::beast::error_code ec, std::size_t bytes_transferred, std::chrono::steady_clock::time_point read_start_time);
 
     /**
      * @brief Sends an HTTP response to the client.

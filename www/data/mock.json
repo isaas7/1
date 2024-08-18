@@ -26,15 +26,6 @@
                 "color": "red",
                 "food": "sushi"
             }
-        },
-        {
-            "id": 4,
-            "name": "Diana",
-            "email": "diana@example.com",
-            "preferences": {
-                "color": "purple",
-                "food": "steak"
-            }
         }
     ]
 }
