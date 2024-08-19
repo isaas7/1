@@ -1,7 +1,7 @@
 #ifndef SESSION_HPP
 #define SESSION_HPP
 
-#include "../../app/include/application.hpp"
+#include "../../app/include/app.hpp"
 #include "http_tools.hpp"
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>

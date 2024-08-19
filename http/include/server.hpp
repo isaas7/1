@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "../../app/include/application.hpp"
+#include "../../app/include/app.hpp"
 #include "../../log/include/log.hpp"
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
