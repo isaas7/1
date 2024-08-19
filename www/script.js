@@ -1,4 +1,6 @@
 let lastResponse = ""; // Variable to store the last response from the LLM
+const ctx = document.getElementById('performanceChart').getContext('2d');
+let chart; // Reference to the Chart.js instance
 
 document.getElementById('sendQueryButton').addEventListener('click', function() {
     const queryInput = document.getElementById('queryInput');
@@ -18,7 +20,6 @@ document.getElementById('sendQueryButton').addEventListener('click', function() 
     // Send the query with the previous response as context
     sendQuery(queryText, lastResponse);
 });
-
 
 function sendQuery(query) {
     fetch('/', {
@@ -104,6 +105,101 @@ function fetchQueryUpdates(queryId) {
         });
     }, 1000);
 }
+
+function fetchPerformanceStatistics() {
+    fetch('/performance_statistics')
+        .then(response => response.json())
+        .then(data => {
+            const currentTime = new Date().toLocaleTimeString(); // Get the current time
+
+            if (chart) {
+                // Update the existing chart with new data
+                chart.data.labels.push(currentTime);
+
+                chart.data.datasets[0].data.push(data[0].average_value);
+                chart.data.datasets[1].data.push(data[0].count);
+                chart.data.datasets[2].data.push(data[0].max_value);
+                chart.data.datasets[3].data.push(data[0].min_value);
+                chart.data.datasets[4].data.push(data[0].total_value);
+
+                // Keep the last 10 entries in the chart
+                if (chart.data.labels.length > 10) {
+                    chart.data.labels.shift();
+                    chart.data.datasets.forEach(dataset => dataset.data.shift());
+                }
+
+                chart.update();
+            } else {
+                // Create the chart if it doesn't exist
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [currentTime],
+                        datasets: [
+                            {
+                                label: 'Average',
+                                data: [data[0].average_value],
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                fill: false
+                            },
+                            {
+                                label: 'Count',
+                                data: [data[0].count],
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                fill: false
+                            },
+                            {
+                                label: 'Max',
+                                data: [data[0].max_value],
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                fill: false
+                            },
+                            {
+                                label: 'Min',
+                                data: [data[0].min_value],
+                                borderColor: 'rgba(255, 206, 86, 1)',
+                                fill: false
+                            },
+                            {
+                                label: 'Total',
+                                data: [data[0].total_value],
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching performance statistics:', error);
+        });
+}
+
+// Fetch statistics on an interval
+setInterval(fetchPerformanceStatistics, 1000); // Fetch every 5 seconds
 
 function addMessage(message, alignment) {
     const responseContainer = document.getElementById('queryResponses');

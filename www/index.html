@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Query Client</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js library -->
 </head>
 <body>
     <div class="container">
@@ -15,6 +16,8 @@
             <textarea id="queryInput" placeholder="Enter your query here..."></textarea>
             <button id="sendQueryButton">Send Query</button>
         </div>
+        <button id="fetchStatsButton">Fetch Performance Statistics</button>
+        <canvas id="performanceChart"></canvas> <!-- Canvas for the line chart -->
     </div>
 
     <script src="script.js"></script>
