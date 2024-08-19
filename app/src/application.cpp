@@ -12,6 +12,7 @@
  * @brief Constructs an Application object and starts the query processing thread.
  * 
  * @param ioc The Boost.Asio I/O context that the application will use for asynchronous operations.
+ * @param ssl_ctx The SSL context used for managing SSL connections.
  */
 Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
     : io_context_(ioc), ssl_ctx_(ssl_ctx), client_(std::make_shared<Client>(ioc, ssl_ctx)), ollama_("http://localhost:11434"), timer_(io_context_)
@@ -61,11 +62,10 @@ void Application::initialize_database() {
     }
 }
 
-
 /**
- * @brief Checks if a table exists in the database and creates it if it doesn't.
+ * @brief Checks if tables exist in the database and creates them if they don't.
  * 
- * Checks if the "example_table" exists in the SQLite database and creates it if it doesn't.
+ * This method ensures that the necessary tables are present in the SQLite database.
  */
 void Application::check_and_create_tables() {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
@@ -92,7 +92,14 @@ void Application::check_and_create_tables() {
     }
 }
 
-
+/**
+ * @brief Logs a performance metric to the database.
+ * 
+ * Stores a metric with its name and value in the performance_metrics table along with the current timestamp.
+ * 
+ * @param metric_name The name of the metric to log.
+ * @param metric_value The value of the metric to log.
+ */
 void Application::log_performance_metric(const std::string& metric_name, double metric_value) {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
 
@@ -116,14 +123,13 @@ void Application::log_performance_metric(const std::string& metric_name, double 
     }
 }
 
-
-
 /**
  * @brief Adds a new query to the application.
  * 
  * Generates a unique query ID, stores the prompt, and places the query in the queue for processing.
  * 
  * @param prompt The prompt to be sent to the LLM.
+ * @param context The context from the previous response, if any.
  * @return The unique ID of the newly added query.
  */
 std::string Application::add_query(const std::string& prompt, const ollama::response& context) {
@@ -145,7 +151,6 @@ std::string Application::add_query(const std::string& prompt, const ollama::resp
 
     return query->id;
 }
-
 
 /**
  * @brief Retrieves the status of a specific query.
@@ -276,8 +281,11 @@ void Application::run_query(const std::shared_ptr<Query>& query) {
     query->running = false;
 }
 
-
-
+/**
+ * @brief Fetches JSON data from a server and submits it to the LLM for processing.
+ * 
+ * The method performs a GET request to a specified endpoint, retrieves the JSON data, and submits it to the LLM for processing.
+ */
 void Application::fetch_and_update_json_data()
 {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG);
@@ -301,6 +309,13 @@ void Application::fetch_and_update_json_data()
     }
 }
 
+/**
+ * @brief Retrieves performance statistics from the database.
+ * 
+ * This method calculates various statistics (average, minimum, maximum, total, and count) for each metric in the performance_metrics table.
+ * 
+ * @return A vector of MetricStatistic objects containing the calculated statistics.
+ */
 std::vector<MetricStatistic> Application::get_performance_statistics() {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     std::vector<MetricStatistic> stats;
@@ -328,7 +343,13 @@ std::vector<MetricStatistic> Application::get_performance_statistics() {
     return stats;
 }
 
-
+/**
+ * @brief Converts performance statistics into a JSON format.
+ * 
+ * This method retrieves performance statistics and formats them into a JSON array for easy consumption by other components.
+ * 
+ * @return A JSON array containing the performance statistics.
+ */
 nlohmann::json Application::get_performance_statistics_json() {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
 
@@ -353,3 +374,4 @@ nlohmann::json Application::get_performance_statistics_json() {
 
     return stats_json;
 }
+
