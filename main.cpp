@@ -15,7 +15,7 @@
 
 int main(int argc, char* argv[])
 {
-    auto logger = LoggerManager::getLogger("MainLogger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    auto logger = LoggerManager::getLogger("main_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     
     if (argc != 5)
     {

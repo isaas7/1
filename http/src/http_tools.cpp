@@ -29,7 +29,7 @@ http::response<http::string_body> send_(
         const std::string& content_type = "application/json")
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
-    logger->log(LogLevel::DEBUG, "Preparing response with status: " + std::to_string(static_cast<int>(status)));
+    logger->log(LogLevel::INFO, "Preparing response with status: " + std::to_string(static_cast<int>(status)));
 
     http::response<http::string_body> res{status, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -38,7 +38,7 @@ http::response<http::string_body> send_(
     res.body() = body;
     res.prepare_payload();
 
-    logger->log(LogLevel::DEBUG, "Response prepared with body: " + body);
+    logger->log(LogLevel::INFO, "Response prepared with body: " + body);
     return res;
 }
 
@@ -77,11 +77,11 @@ http::message_generator handle_get_request(
 
     try {
         std::string path = path_cat(doc_root, req.target());
-        logger->log(LogLevel::DEBUG, "Computed path: " + path);
+        logger->log(LogLevel::INFO, "Computed path: " + path);
 
         if (req.target().back() == '/') {
             path.append("index.html");
-            logger->log(LogLevel::DEBUG, "Appended index.html to path: " + path);
+            logger->log(LogLevel::INFO, "Appended index.html to path: " + path);
         }
 
         beast::error_code ec;
@@ -99,7 +99,7 @@ http::message_generator handle_get_request(
         }
 
         auto const size = body.size();
-        logger->log(LogLevel::DEBUG, "File opened successfully, size: " + std::to_string(size));
+        logger->log(LogLevel::INFO, "File opened successfully, size: " + std::to_string(size));
 
         if (req.method() == http::verb::head) {
             logger->log(LogLevel::DEBUG, "HEAD request, preparing response headers.");

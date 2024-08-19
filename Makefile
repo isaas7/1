@@ -1,6 +1,6 @@
 # Compiler
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -I$(HTTP_DIR)/include -I$(APP_DIR)/include -I$(LOG_DIR)/include -I$(OLLAMA_DIR)/include
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -I$(HTTP_DIR)/include -I$(APP_DIR)/include -I$(LOG_DIR)/include
 
 # Libraries
 LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto -ldl -lm -lSQLiteCpp -lsqlite3
@@ -9,7 +9,6 @@ LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto
 APP_DIR = app
 HTTP_DIR = http
 LOG_DIR = log
-OLLAMA_DIR = ollama
 SRC_DIR = $(HTTP_DIR)/src $(APP_DIR)/src $(LOG_DIR)/src $(OLLAMA_DIR)/src
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -22,16 +21,14 @@ MAIN_SRC_FILE = main.cpp
 HTTP_SRC_FILES = $(wildcard $(HTTP_DIR)/src/*.cpp)
 APP_SRC_FILES = $(wildcard $(APP_DIR)/src/*.cpp)
 LOG_SRC_FILES = $(wildcard $(LOG_DIR)/src/*.cpp)
-OLLAMA_SRC_FILES = $(wildcard $(OLLAMA_DIR)/src/*.cpp)
-SRC_FILES = $(MAIN_SRC_FILE) $(HTTP_SRC_FILES) $(APP_SRC_FILES) $(LOG_SRC_FILES) $(OLLAMA_SRC_FILES)
+SRC_FILES = $(MAIN_SRC_FILE) $(HTTP_SRC_FILES) $(APP_SRC_FILES) $(LOG_SRC_FILES)
 
 # Object files
 MAIN_OBJ_FILE = $(OBJ_DIR)/main.o
 HTTP_OBJ_FILES = $(patsubst $(HTTP_DIR)/src/%.cpp,$(OBJ_DIR)/http_%.o,$(HTTP_SRC_FILES))
 APP_OBJ_FILES = $(patsubst $(APP_DIR)/src/%.cpp,$(OBJ_DIR)/app_%.o,$(APP_SRC_FILES))
 LOG_OBJ_FILES = $(patsubst $(LOG_DIR)/src/%.cpp,$(OBJ_DIR)/log_%.o,$(LOG_SRC_FILES))
-OLLAMA_OBJ_FILES = $(patsubst $(OLLAMA_DIR)/src/%.cpp,$(OBJ_DIR)/ollama_%.o,$(OLLAMA_SRC_FILES))
-OBJ_FILES = $(MAIN_OBJ_FILE) $(HTTP_OBJ_FILES) $(APP_OBJ_FILES) $(LOG_OBJ_FILES) $(OLLAMA_OBJ_FILES)
+OBJ_FILES = $(MAIN_OBJ_FILE) $(HTTP_OBJ_FILES) $(APP_OBJ_FILES) $(LOG_OBJ_FILES)
 
 # Default target
 all: $(TARGET)
@@ -56,10 +53,6 @@ $(OBJ_DIR)/app_%.o: $(APP_DIR)/src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/log_%.o: $(LOG_DIR)/src/%.cpp
-	@mkdir -p $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/ollama_%.o: $(OLLAMA_DIR)/src/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
