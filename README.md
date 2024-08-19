@@ -6,12 +6,6 @@
 
 The application is organized into distinct modules that handle various aspects of the networking stack, from managing SSL certificates to handling HTTP requests and WebSocket sessions. **beastapp's** modular architecture makes it easy to extend and customize, whether you're building a web server, an API service, or a real-time communication platform.
 
-### Ollama ML/LLM Integration
-
-A key feature of beastapp is its integration with Ollama's machine learning language model (LLM) capabilities. This allows the application to perform advanced natural language processing (NLP) tasks directly within the server environment. The integration is designed to be seamless, enabling beastapp to send prompts to the LLM and receive sophisticated responses, such as explanations, insights, or other text-based information, making it ideal for AI-driven applications.
-
-The LLM queries are efficiently handled using the **ollama-hpp**, which abstracts the complexities of interacting with the language model, allowing for straightforward integration with the rest of the application. This feature is especially useful for building AI-powered chatbots, customer support systems, or any other service requiring natural language understanding and generation.
-
 ## Getting Started
 
 ### Prerequisites
@@ -22,7 +16,6 @@ The LLM queries are efficiently handled using the **ollama-hpp**, which abstract
 - libcrypto (OpenSSL cryptographic library)
 - make (for building the project)
 - g++ or clang++ (C++ compiler)
-- ollama.hpp
 
 ### Installation
 
@@ -57,7 +50,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## Acknowledgments
 
-Special thanks to the Boost community for providing a powerful and flexible set of libraries that make C++ development more accessible and efficient. Also, thanks to the Ollama team/community for their excellent machine learning models that power the LLM integration in this project.
+Special thanks to the Boost community for providing a powerful and flexible set of libraries that make C++ development more accessible and efficient.
 
 
 
