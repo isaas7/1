@@ -1,5 +1,5 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#ifndef APP_HPP
+#define APP_HPP
 
 #include <queue>
 #include <unordered_map>
@@ -39,5 +39,5 @@ private:
 
 };
 
-#endif // APPLICATION_HPP
+#endif // APP_HPP
 

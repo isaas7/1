@@ -1,7 +1,7 @@
 #ifndef HTTP_TOOLS_HPP
 #define HTTP_TOOLS_HPP
 
-#include "../../app/include/application.hpp"
+#include "../../app/include/app.hpp"
 #include "beast.hpp"
 #include <boost/config.hpp>
 #include <boost/asio/dispatch.hpp>

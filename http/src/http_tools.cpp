@@ -9,6 +9,7 @@
 #include <boost/beast/version.hpp>
 #include <string>
 
+// Set the log level for HTTP operations
 LogLevel http_log_level = LogLevel::DEBUG;
 
 /**
@@ -18,15 +19,14 @@ LogLevel http_log_level = LogLevel::DEBUG;
  * @param status The HTTP status code.
  * @param body The response body content.
  * @param content_type The content type of the response.
- * @param logger A shared pointer to the logger used for logging.
  * @return The HTTP response object.
  */
 template <class Body, class Allocator>
 http::response<http::string_body> send_(
-        http::request<Body, http::basic_fields<Allocator>> const& req,
-        http::status status,
-        const std::string& body,
-        const std::string& content_type = "application/json")
+    http::request<Body, http::basic_fields<Allocator>> const& req,
+    http::status status,
+    const std::string& body,
+    const std::string& content_type = "application/json")
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::INFO, "Preparing response with status: " + std::to_string(static_cast<int>(status)));
@@ -42,17 +42,49 @@ http::response<http::string_body> send_(
     return res;
 }
 
+/**
+ * @brief Handle an HTTP DELETE request.
+ * 
+ * @param req The DELETE request object.
+ * @return The HTTP response as a message generator.
+ */
+template <class Body, class Allocator>
+http::message_generator handle_delete_request(
+    http::request<Body, http::basic_fields<Allocator>>&& req)
+{
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    logger->log(LogLevel::DEBUG, "Received DELETE request for target: " + std::string(req.target()));
+
+    // Implement logic for handling the DELETE request, e.g., removing a resource.
+    return send_(req, http::status::ok, R"({"message": "DELETE request processed"})");
+}
+
+/**
+ * @brief Handle an HTTP PUT request.
+ * 
+ * @param req The PUT request object.
+ * @return The HTTP response as a message generator.
+ */
+template <class Body, class Allocator>
+http::message_generator handle_put_request(
+    http::request<Body, http::basic_fields<Allocator>>&& req)
+{
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    logger->log(LogLevel::DEBUG, "Received PUT request for target: " + std::string(req.target()));
+
+    // Implement logic for handling the PUT request, e.g., updating a resource.
+    return send_(req, http::status::ok, R"({"message": "PUT request processed"})");
+}
 
 /**
  * @brief Handle an HTTP POST request.
  * 
  * @param req The POST request object.
- * @param logger A shared pointer to the logger used for logging.
  * @return The HTTP response as a message generator.
  */
-    template <class Body, class Allocator>
+template <class Body, class Allocator>
 http::message_generator handle_post_request(
-        http::request<Body, http::basic_fields<Allocator>>&& req)
+    http::request<Body, http::basic_fields<Allocator>>&& req)
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received POST request for target: " + std::string(req.target()));
@@ -64,13 +96,12 @@ http::message_generator handle_post_request(
  * 
  * @param doc_root The document root directory.
  * @param req The GET request object.
- * @param logger A shared pointer to the logger used for logging.
  * @return The HTTP response as a message generator.
  */
-    template <class Body, class Allocator>
+template <class Body, class Allocator>
 http::message_generator handle_get_request(
-        beast::string_view doc_root,
-        http::request<Body, http::basic_fields<Allocator>>&& req)
+    beast::string_view doc_root,
+    http::request<Body, http::basic_fields<Allocator>>&& req)
 {
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received GET request for target: " + std::string(req.target()));
@@ -135,14 +166,15 @@ http::message_generator handle_get_request(
  * 
  * @param doc_root The document root directory.
  * @param req The HTTP request object.
- * @param logger A shared pointer to the logger used for logging.
+ * @param app A shared pointer to the Application instance.
  * @return The HTTP response as a message generator.
  */
 template <class Body, class Allocator>
 http::message_generator handle_request(
-        beast::string_view doc_root,
-        boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req,
-        std::shared_ptr<Application> app) {
+    beast::string_view doc_root,
+    http::request<Body, http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)
+{
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
 
@@ -152,6 +184,12 @@ http::message_generator handle_request(
     } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
         logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
         return handle_get_request(doc_root, std::move(req));
+    } else if (req.method() == http::verb::put) {
+        logger->log(LogLevel::DEBUG, "Delegating to handle_put_request.");
+        return handle_put_request(std::move(req));
+    } else if (req.method() == http::verb::delete_) {
+        logger->log(LogLevel::DEBUG, "Delegating to handle_delete_request.");
+        return handle_delete_request(std::move(req));
     } else {
         logger->log(LogLevel::DEBUG, "Unknown HTTP method, responding with bad request.");
         return send_(req, http::status::bad_request, "Unknown HTTP-method");
@@ -227,7 +265,9 @@ std::string path_cat(beast::string_view base, beast::string_view path)
     return result;
 }
 
+// Explicit template instantiation for string body requests
 template http::message_generator handle_request<http::string_body, std::allocator<char>>(
-        beast::string_view doc_root,
-        http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
-        std::shared_ptr<Application> app);
+    beast::string_view doc_root,
+    http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
+    std::shared_ptr<Application> app);
+

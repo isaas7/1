@@ -1,4 +1,4 @@
-#include "../include/application.hpp"
+#include "../include/app.hpp"
 #include "../../log/include/log.hpp"
 #include <vector>
 #include <numeric>
@@ -15,7 +15,7 @@
  * @param ssl_ctx The SSL context used for managing SSL connections.
  */
 Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx) : io_context_(ioc), ssl_ctx_(ssl_ctx) { 
-    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    auto logger = LoggerManager::getLogger("app_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
     logger->log(LogLevel::DEBUG, "Initializing app.");
 }
 
