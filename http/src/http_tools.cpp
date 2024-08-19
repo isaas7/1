@@ -1,4 +1,5 @@
 #include "../include/http_tools.hpp"
+#include "../include/http_tools.hpp"
 #include "../include/utils.hpp"
 #include "../../log/include/log.hpp"
 #include <boost/asio/dispatch.hpp>
@@ -234,6 +235,25 @@ http::message_generator handle_get_request(
     }
 }
 
+template <class Body, class Allocator>
+http::message_generator handle_performance_statistics_request(
+    http::request<Body, http::basic_fields<Allocator>>&& req,
+    std::shared_ptr<Application> app)
+{
+    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    logger->log(LogLevel::DEBUG, "Received request for performance statistics.");
+
+    try {
+        // Retrieve the performance statistics as JSON
+        nlohmann::json stats_json = app->get_performance_statistics_json();
+
+        // Send the JSON data as the response
+        return send_(req, http::status::ok, stats_json.dump(), "application/json");
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Exception caught while serving performance statistics: " + std::string(e.what()));
+        return send_(req, http::status::internal_server_error, R"({"error": ")" + std::string(e.what()) + "\"}");
+    }
+}
 
 /**
  * @brief Handle an HTTP request and generate an appropriate response.
@@ -249,15 +269,12 @@ template <class Body, class Allocator>
 http::message_generator handle_request(
     beast::string_view doc_root,
     boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req,
-    std::shared_ptr<Application> app)
-{
+    std::shared_ptr<Application> app) { 
     auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
 
-    // Use high_resolution_clock for finer precision
     auto process_start_time = std::chrono::high_resolution_clock::now();
 
-    // Initialize the response variable directly with the appropriate handler
     http::message_generator response = [&] {
         if (req.method() == http::verb::post && req.target() == "/") {
             logger->log(LogLevel::DEBUG, "Delegating to handle_post_request.");
@@ -265,6 +282,9 @@ http::message_generator handle_request(
         } else if (req.method() == http::verb::get && req.target() == "/json_data") {
             logger->log(LogLevel::DEBUG, "Delegating to handle_json_data_request.");
             return handle_json_data_request(std::move(req), app);
+        } else if (req.method() == http::verb::get && req.target() == "/performance_statistics") {
+            logger->log(LogLevel::DEBUG, "Delegating to handle_performance_statistics_request.");
+            return handle_performance_statistics_request(std::move(req), app);
         } else if (req.method() == http::verb::get || req.method() == http::verb::head) {
             logger->log(LogLevel::DEBUG, "Delegating to handle_get_request.");
             return handle_get_request(doc_root, std::move(req), app);
@@ -277,11 +297,11 @@ http::message_generator handle_request(
     auto process_end_time = std::chrono::high_resolution_clock::now();
     auto process_duration = std::chrono::duration_cast<std::chrono::microseconds>(process_end_time - process_start_time).count();
     logger->log(LogLevel::DEBUG, "Time to process request: " + std::to_string(process_duration) + " µs");
+    // Log the request processing time
+    app->log_performance_metric("Request Processing Duration (µs)", process_duration);
+
     return response;
 }
-
-
-
 
 
 /**
@@ -358,4 +378,5 @@ template http::message_generator handle_request<http::string_body, std::allocato
     beast::string_view doc_root,
     http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
     std::shared_ptr<Application> app);
+
 
