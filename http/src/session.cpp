@@ -21,7 +21,7 @@ session::session(
     , doc_root_(doc_root)
       , app_(app)
 {
-    auto logger = LoggerManager::getLogger("session_logger", LogLevel::DEBUG);
+    auto logger = LoggerManager::getLogger("session_logger", LogLevel::INFO);
     logger->log(LogLevel::DEBUG, "Session created.");
 }
 

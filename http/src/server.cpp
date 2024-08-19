@@ -24,7 +24,7 @@ server::server(
     , doc_root_(doc_root)
     , app_(app)
 {
-    logger_ = LoggerManager::getLogger("server_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    logger_ = LoggerManager::getLogger("server_logger", LogLevel::INFO, LogOutput::CONSOLE);
     logger_->log(LogLevel::DEBUG, "Initializing server.");
 
     boost::beast::error_code ec;
