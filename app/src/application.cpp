@@ -1,5 +1,7 @@
 #include "../include/application.hpp"
 #include "../../log/include/log.hpp"
+#include <vector>
+#include <numeric>
 #include <sqlite3.h>
 #include <chrono>
 #include <iomanip>
@@ -27,11 +29,7 @@ Application::Application(boost::asio::io_context& ioc, ssl::context& ssl_ctx)
 /**
  * @brief Destructor to close the database connection.
  */
-Application::~Application() {
-    if (db_) {
-        sqlite3_close(db_);
-    }
-}
+Application::~Application() {}
 
 /**
  * @brief Initializes the SQLite database connection.
@@ -48,19 +46,21 @@ void Application::initialize_database() {
     ss << std::put_time(std::localtime(&in_time_t), "%m_%d_%Y");
     std::string db_filename = "database_" + ss.str() + ".db";
 
-    // Check if the database file for the current date already exists
+    // Log if using an existing or new database
     if (std::filesystem::exists(db_filename)) {
         logger->log(LogLevel::DEBUG, "Using existing database for today: " + db_filename);
     } else {
         logger->log(LogLevel::DEBUG, "Creating new database for today: " + db_filename);
     }
 
-    // Open the database connection
-    if (sqlite3_open(db_filename.c_str(), &db_) != SQLITE_OK) {
-        logger->log(LogLevel::ERROR, "Cannot open database: " + std::string(sqlite3_errmsg(db_)));
+    try {
+        db_ = std::make_unique<SQLite::Database>(db_filename, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Cannot open database: " + std::string(e.what()));
         throw std::runtime_error("Failed to open database");
     }
 }
+
 
 /**
  * @brief Checks if a table exists in the database and creates it if it doesn't.
@@ -70,20 +70,53 @@ void Application::initialize_database() {
 void Application::check_and_create_tables() {
     auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
 
-    // SQL command to create the example_table if it doesn't exist
-    const char* check_table_sql = "CREATE TABLE IF NOT EXISTS example_table ("
-                                  "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                                  "data TEXT NOT NULL);";
-    
-    char* errmsg = nullptr;
-    if (sqlite3_exec(db_, check_table_sql, 0, 0, &errmsg) != SQLITE_OK) {
-        logger->log(LogLevel::ERROR, "Failed to create/check example_table: " + std::string(errmsg));
-        sqlite3_free(errmsg);
-        throw std::runtime_error("Failed to create/check example_table");
-    } else {
+    const std::string check_table_sql = "CREATE TABLE IF NOT EXISTS example_table ("
+                                        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                        "data TEXT NOT NULL);";
+
+    const std::string create_metrics_table_sql = "CREATE TABLE IF NOT EXISTS performance_metrics ("
+                                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                                 "timestamp TEXT NOT NULL,"
+                                                 "metric_name TEXT NOT NULL,"
+                                                 "metric_value REAL NOT NULL);";
+
+    try {
+        db_->exec(check_table_sql);
         logger->log(LogLevel::DEBUG, "Checked/created example_table successfully.");
+        
+        db_->exec(create_metrics_table_sql);
+        logger->log(LogLevel::DEBUG, "Checked/created performance_metrics table successfully.");
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Failed to create/check tables: " + std::string(e.what()));
+        throw std::runtime_error("Failed to create/check tables");
     }
 }
+
+
+void Application::log_performance_metric(const std::string& metric_name, double metric_value) {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+
+    // Get the current timestamp
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+
+    const std::string sql = "INSERT INTO performance_metrics (timestamp, metric_name, metric_value) VALUES (?, ?, ?);";
+
+    try {
+        SQLite::Statement stmt(*db_, sql);
+        stmt.bind(1, ss.str());
+        stmt.bind(2, metric_name);
+        stmt.bind(3, metric_value);
+        stmt.exec();
+        logger->log(LogLevel::DEBUG, "Performance metric logged: " + metric_name + " = " + std::to_string(metric_value));
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Failed to log performance metric: " + std::string(e.what()));
+    }
+}
+
+
 
 /**
  * @brief Adds a new query to the application.
@@ -268,3 +301,55 @@ void Application::fetch_and_update_json_data()
     }
 }
 
+std::vector<MetricStatistic> Application::get_performance_statistics() {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+    std::vector<MetricStatistic> stats;
+
+    const std::string sql = "SELECT metric_name, AVG(metric_value), MIN(metric_value), MAX(metric_value), SUM(metric_value), COUNT(*) "
+                            "FROM performance_metrics "
+                            "GROUP BY metric_name;";
+
+    try {
+        SQLite::Statement query(*db_, sql);
+        while (query.executeStep()) {
+            MetricStatistic stat;
+            stat.metric_name = query.getColumn(0).getString();
+            stat.average_value = query.getColumn(1).getDouble();
+            stat.min_value = query.getColumn(2).getDouble();
+            stat.max_value = query.getColumn(3).getDouble();
+            stat.total_value = query.getColumn(4).getDouble();
+            stat.count = query.getColumn(5).getInt();
+            stats.push_back(stat);
+        }
+    } catch (const std::exception& e) {
+        logger->log(LogLevel::ERROR, "Failed to retrieve performance statistics: " + std::string(e.what()));
+    }
+
+    return stats;
+}
+
+
+nlohmann::json Application::get_performance_statistics_json() {
+    auto logger = LoggerManager::getLogger("application_logger", LogLevel::DEBUG, LogOutput::CONSOLE);
+
+    nlohmann::json stats_json = nlohmann::json::array();
+    std::vector<MetricStatistic> stats = get_performance_statistics();
+
+    if (stats.empty()) {
+        logger->log(LogLevel::INFO, "No performance metrics found.");
+        return stats_json;
+    }
+
+    for (const auto& stat : stats) {
+        nlohmann::json stat_json;
+        stat_json["metric_name"] = stat.metric_name;
+        stat_json["average_value"] = stat.average_value;
+        stat_json["min_value"] = stat.min_value;
+        stat_json["max_value"] = stat.max_value;
+        stat_json["total_value"] = stat.total_value;
+        stat_json["count"] = stat.count;
+        stats_json.push_back(stat_json);
+    }
+
+    return stats_json;
+}

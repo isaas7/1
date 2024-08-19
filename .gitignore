@@ -8,4 +8,4 @@ main
 obj/
 flex/
 *.db
-
+test/

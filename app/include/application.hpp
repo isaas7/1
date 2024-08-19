@@ -11,10 +11,20 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <sqlite3.h>  // Include SQLite header
+#include <SQLiteCpp/SQLiteCpp.h>
 
 #include "../../ollama/include/ollama.hpp"
 #include "../../http/include/client.hpp"
 #include "../../log/include/log.hpp"
+
+struct MetricStatistic {
+    std::string metric_name;
+    double average_value;
+    double min_value;
+    double max_value;
+    double total_value;
+    int count;
+};
 
 /**
  * @brief A structure representing a query to the LLM.
@@ -86,7 +96,9 @@ public:
 
     void fetch_and_update_json_data(); 
     // Existing methods, if any, should be documented similarly.
-
+    void log_performance_metric(const std::string& metric_name, double metric_value);
+    std::vector<MetricStatistic> get_performance_statistics();
+    nlohmann::json get_performance_statistics_json();
 private:
     boost::asio::io_context& io_context_;  ///< Reference to the I/O context used for async operations.
     ssl::context& ssl_ctx_;
@@ -97,9 +109,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Query>> query_map_;  ///< Map from query IDs to their associated Query objects.
     std::mutex queue_mutex_;  ///< Mutex to protect access to the query queue and map.
     std::condition_variable queue_cv_;  ///< Condition variable to signal when new queries are added to the queue.
-
-    sqlite3* db_;  ///< SQLite database connection pointer
-
+    std::unique_ptr<SQLite::Database> db_;
     /**
      * @brief Initializes the SQLite database connection.
      * 

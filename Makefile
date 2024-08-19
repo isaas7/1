@@ -3,7 +3,7 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -I$(HTTP_DIR)/include -I$(APP_DIR)/include -I$(LOG_DIR)/include -I$(OLLAMA_DIR)/include
 
 # Libraries
-LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto -ldl -lm -lsqlite3
+LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto -ldl -lm -lSQLiteCpp -lsqlite3
 
 # Directories
 APP_DIR = app
