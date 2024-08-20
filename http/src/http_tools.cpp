@@ -23,14 +23,13 @@ LogLevel http_log_level = LogLevel::DEBUG;
  */
 template <class Body, class Allocator>
 http::response<http::string_body> send_(
-    http::request<Body, http::basic_fields<Allocator>> const& req,
-    http::status status,
-    const std::string& body,
-    const std::string& content_type = "application/json")
+        http::request<Body, http::basic_fields<Allocator>> const& req,
+        http::status status,
+        const std::string& body,
+        const std::string& content_type = "application/json")
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", http_log_level);
     logger->log(LogLevel::INFO, "Preparing response with status: " + std::to_string(static_cast<int>(status)));
-
     http::response<http::string_body> res{status, req.version()};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, content_type);
@@ -50,9 +49,9 @@ http::response<http::string_body> send_(
  */
 template <class Body, class Allocator>
 http::message_generator handle_delete_request(
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+        http::request<Body, http::basic_fields<Allocator>>&& req)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received DELETE request for target: " + std::string(req.target()));
 
     // Implement logic for handling the DELETE request, e.g., removing a resource.
@@ -67,9 +66,9 @@ http::message_generator handle_delete_request(
  */
 template <class Body, class Allocator>
 http::message_generator handle_put_request(
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+        http::request<Body, http::basic_fields<Allocator>>&& req)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received PUT request for target: " + std::string(req.target()));
 
     // Implement logic for handling the PUT request, e.g., updating a resource.
@@ -84,9 +83,9 @@ http::message_generator handle_put_request(
  */
 template <class Body, class Allocator>
 http::message_generator handle_post_request(
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+        http::request<Body, http::basic_fields<Allocator>>&& req)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", http_log_level);
     logger->log(LogLevel::DEBUG, "Received POST request for target: " + std::string(req.target()));
     return send_(req, http::status::ok, R"({"message": "POST request processed"})");
 }
@@ -100,10 +99,10 @@ http::message_generator handle_post_request(
  */
 template <class Body, class Allocator>
 http::message_generator handle_get_request(
-    beast::string_view doc_root,
-    http::request<Body, http::basic_fields<Allocator>>&& req)
+        beast::string_view doc_root,
+        http::request<Body, http::basic_fields<Allocator>>&& req)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", LogLevel::DEBUG);
     logger->log(LogLevel::DEBUG, "Received GET request for target: " + std::string(req.target()));
 
     try {
@@ -120,7 +119,7 @@ http::message_generator handle_get_request(
         body.open(path.c_str(), beast::file_mode::scan, ec);
 
         if (ec == beast::errc::no_such_file_or_directory) {
-            logger->log(LogLevel::DEBUG, "File not found: " + path);
+            logger->log(LogLevel::INFO, "File not found: " + path);
             return send_(req, http::status::not_found, "The resource was not found.");
         }
 
@@ -145,8 +144,8 @@ http::message_generator handle_get_request(
         logger->log(LogLevel::DEBUG, "GET request, preparing full response.");
         http::response<http::file_body> res{
             std::piecewise_construct,
-                std::make_tuple(std::move(body)),
-                std::make_tuple(http::status::ok, req.version())
+            std::make_tuple(std::move(body)),
+            std::make_tuple(http::status::ok, req.version())
         };
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, mime_type(path));
@@ -171,11 +170,11 @@ http::message_generator handle_get_request(
  */
 template <class Body, class Allocator>
 http::message_generator handle_request(
-    beast::string_view doc_root,
-    http::request<Body, http::basic_fields<Allocator>>&& req,
-    std::shared_ptr<Application> app)
+        beast::string_view doc_root,
+        http::request<Body, http::basic_fields<Allocator>>&& req,
+        std::shared_ptr<Application> app)
 {
-    auto logger = LoggerManager::getLogger("http_tools_logger", http_log_level);
+    auto logger = LoggerManager::getLogger("http_logger", LogLevel::INFO);
     logger->log(LogLevel::DEBUG, "Received request: " + std::string(req.method_string()) + " " + std::string(req.target()));
 
     if (req.method() == http::verb::post && req.target() == "/") {
@@ -195,6 +194,7 @@ http::message_generator handle_request(
         return send_(req, http::status::bad_request, "Unknown HTTP-method");
     }
 }
+
 
 /**
  * @brief Determine the MIME type based on the file extension.
@@ -267,7 +267,7 @@ std::string path_cat(beast::string_view base, beast::string_view path)
 
 // Explicit template instantiation for string body requests
 template http::message_generator handle_request<http::string_body, std::allocator<char>>(
-    beast::string_view doc_root,
-    http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
-    std::shared_ptr<Application> app);
+        beast::string_view doc_root,
+        http::request<http::string_body, http::basic_fields<std::allocator<char>>>&& req,
+        std::shared_ptr<Application> app);
 

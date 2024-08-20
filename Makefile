@@ -1,6 +1,6 @@
 # Compiler
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -I$(HTTP_DIR)/include -I$(APP_DIR)/include -I$(LOG_DIR)/include
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -I$(HTTP_DIR)/include -I$(APP_DIR)/include -I$(LOG_DIR)/include -I$(DB_DIR)/include
 
 # Libraries
 LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto -ldl -lm -lSQLiteCpp -lsqlite3
@@ -9,7 +9,8 @@ LIBS = -lpthread -lboost_system -lboost_filesystem -lboost_thread -lssl -lcrypto
 APP_DIR = app
 HTTP_DIR = http
 LOG_DIR = log
-SRC_DIR = $(HTTP_DIR)/src $(APP_DIR)/src $(LOG_DIR)/src $(OLLAMA_DIR)/src
+DB_DIR = db
+SRC_DIR = $(HTTP_DIR)/src $(APP_DIR)/src $(LOG_DIR)/src $(DB_DIR)/src
 OBJ_DIR = obj
 BIN_DIR = bin
 
@@ -21,14 +22,16 @@ MAIN_SRC_FILE = main.cpp
 HTTP_SRC_FILES = $(wildcard $(HTTP_DIR)/src/*.cpp)
 APP_SRC_FILES = $(wildcard $(APP_DIR)/src/*.cpp)
 LOG_SRC_FILES = $(wildcard $(LOG_DIR)/src/*.cpp)
-SRC_FILES = $(MAIN_SRC_FILE) $(HTTP_SRC_FILES) $(APP_SRC_FILES) $(LOG_SRC_FILES)
+DB_SRC_FILES = $(wildcard $(DB_DIR)/src/*.cpp)
+SRC_FILES = $(MAIN_SRC_FILE) $(HTTP_SRC_FILES) $(APP_SRC_FILES) $(LOG_SRC_FILES) $(DB_SRC_FILES)
 
 # Object files
 MAIN_OBJ_FILE = $(OBJ_DIR)/main.o
 HTTP_OBJ_FILES = $(patsubst $(HTTP_DIR)/src/%.cpp,$(OBJ_DIR)/http_%.o,$(HTTP_SRC_FILES))
 APP_OBJ_FILES = $(patsubst $(APP_DIR)/src/%.cpp,$(OBJ_DIR)/app_%.o,$(APP_SRC_FILES))
 LOG_OBJ_FILES = $(patsubst $(LOG_DIR)/src/%.cpp,$(OBJ_DIR)/log_%.o,$(LOG_SRC_FILES))
-OBJ_FILES = $(MAIN_OBJ_FILE) $(HTTP_OBJ_FILES) $(APP_OBJ_FILES) $(LOG_OBJ_FILES)
+DB_OBJ_FILES = $(patsubst $(DB_DIR)/src/%.cpp,$(OBJ_DIR)/db_%.o,$(DB_SRC_FILES))
+OBJ_FILES = $(MAIN_OBJ_FILE) $(HTTP_OBJ_FILES) $(APP_OBJ_FILES) $(LOG_OBJ_FILES) $(DB_OBJ_FILES)
 
 # Default target
 all: $(TARGET)
@@ -53,6 +56,10 @@ $(OBJ_DIR)/app_%.o: $(APP_DIR)/src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/log_%.o: $(LOG_DIR)/src/%.cpp
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/db_%.o: $(DB_DIR)/src/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

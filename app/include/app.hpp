@@ -13,6 +13,7 @@
 
 #include "../../http/include/client.hpp"
 #include "../../log/include/log.hpp"
+#include "../../db/include/db.hpp"
 
 /**
  * @brief The Application class encapsulates the main logic of the application.
@@ -36,7 +37,7 @@ public:
 private:
     boost::asio::io_context& io_context_;  ///< Reference to the I/O context used for async operations.
     ssl::context& ssl_ctx_;
-
+    Database db_; ///< Instance of the Database class       
 };
 
 #endif // APP_HPP
